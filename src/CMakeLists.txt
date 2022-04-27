@@ -1,9 +1,11 @@
 set(controller_SRC
   MscController.cpp
+  msc_stabilizer.cpp
 )
 
 set(controller_HDR
   MscController.h
+  msc_stabilizer.h
 )
 
 add_library(${PROJECT_NAME} SHARED ${controller_SRC} ${controller_HDR})

@@ -56,3 +56,19 @@ transitions:
 - [MscController_Initial, OK, MscController_Initial, Strict]
 # Initial state
 init: MscController_Initial
+#Observer
+ObserverPipelines:
+  name: "MscControllerObserverPipeline"
+  gui: true
+  observers:
+    - type: Encoder
+      update: true
+    - type: Attitude
+      update: true
+#    - type: KinematicInertial
+#      update: true
+#        imuBodySensor: Accelerometer
+    - type: BodySensor
+      update: true
+      config:
+        bodySensor: FloatingBase
