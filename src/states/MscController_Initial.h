@@ -13,4 +13,5 @@ struct MscController_Initial : mc_control::fsm::State
 
     void teardown(mc_control::fsm::Controller & ctl) override;
 private:
+    bool start_ = false;
 };

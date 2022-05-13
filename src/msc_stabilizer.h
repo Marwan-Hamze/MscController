@@ -1,12 +1,9 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
 #include <iostream>
-#include <mc_tasks/TrajectoryTaskGeneric.h>
 #include <mc_rbdyn/Robots.h>
 
 #pragma once
-
-namespace mc_tasks{
 
 namespace msc_stabilizer{
 
@@ -90,8 +87,8 @@ contact leftFoot;
 struct feedback{
 
 state x;
-Matrix3d R;
-Vector3d pc_1, pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2;
+Matrix3d R, Rc_1, Rc_2;
+Vector3d pc_1 , pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2;
 
 };
 
@@ -99,7 +96,7 @@ Vector3d pc_1, pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2;
  transformations from the world to the com/Base Frame, and as CoMTasks and BaseTasks to prevent the QP from giving them
  undesired values when computing the alphaD vector. */
 
- struct accelerations{
+struct accelerations{
 
 Vector3d RF_linAcc;
 Vector3d RF_angAcc;
@@ -110,13 +107,22 @@ Vector3d LF_angAcc;
 Vector3d ddcom;
 Vector3d dwb;
 
-Matrix<double, 6, 1> acc;
+};
 
- };
+// This struct Contains the linearized Matrices A, B and M
+
+struct linearMatrix{
+
+Matrix<double, 36, 36> A;
+Matrix<double, 36, 12> B;
+
+Matrix<double, 36, 36> M;
+
+};
 
 // This function computes the skew symmetric matrix of a given 3D vector
 
-Matrix3d S(Vector3d v);
+inline Matrix3d S(Vector3d v);
 
 // This function transforms a rotation matrix to a 3d Vector
 // The transformation is based on the matrix/ axis-angle transformation
@@ -140,7 +146,7 @@ struct configuration {
     Matrix<double, 12, 6> Zero12_6;
     Matrix<double, 12, 12> Zero12_12;
 
-    int m;
+    double m;
     Matrix3d I;
 
     Matrix<double, 36, 36> Q;
@@ -149,8 +155,30 @@ struct configuration {
 
     Matrix<double, 36, 12> N_xu;
 
-    Vector3d wf {1, 1, 0};
-    Vector3d wt {0, 0, 1};
+    Vector3d qcom_p {1, 1, 1};
+    Vector3d qcom_R {1, 1, 1};
+    Vector3d qcom_vel {1, 1, 1};
+    Vector3d qcom_angvel {1, 1, 1};
+
+    Vector3d qRF_p {1, 1, 1};
+    Vector3d qRF_R {1, 1, 1};
+    Vector3d qRF_vel {1, 1, 1};
+    Vector3d qRF_angvel {1, 1, 1};
+
+    Vector3d qLF_p {1, 1, 1};
+    Vector3d qLF_R {1, 1, 1};
+    Vector3d qLF_vel {1, 1, 1};
+    Vector3d qLF_angvel {1, 1, 1};
+
+    Vector3d rRF_lacc {1, 1, 1};
+    Vector3d rRF_aacc {1, 1, 1};
+    Vector3d rLF_lacc {1, 1, 1};
+    Vector3d rLF_aacc {1, 1, 1};
+
+    Vector3d wf_RF {0.5, 0.5, 0};
+    Vector3d wt_RF {0, 0, 0.5};
+    Vector3d wf_LF {0.5, 0.5, 0};
+    Vector3d wt_LF {0, 0, 0.5};
 
     Matrix3d KFP_RF, KFP_LF;
     Matrix3d KFD_RF, KFD_LF;
@@ -159,22 +187,17 @@ struct configuration {
 
     Matrix3d Rsc_RF, Rsc_LF;
 
-    Matrix3d Kp;
-    Matrix3d Kd;
+    Matrix3d Kp, Kd;
 
 };
-
-// Run function to run the stabilizer
-
-void run();
-
-// Reset function
-
-void reset();
 
 // This function sets the stabilizer's configuration defined in the struct configuration
 
 configuration configure (mc_rbdyn::Robots &robots);
+
+// This function updates the stabilizer's configuration after modifications from the GUI
+
+void reconfigure(configuration &config);
 
 // This function set the reference values 
 
@@ -185,9 +208,13 @@ state reference(mc_rbdyn::Robots &robots);
 
 feedback getFeedback(mc_rbdyn::Robots &realRobots);
 
-// This function computes the control gain from reference values
+// This function computes the LQR gain from the linearized Matrices
 
-MatrixXd computeGain(state &x_ref, configuration &config);
+linearMatrix computeMatrix(state &x_ref, configuration &config);
+
+// This function computes the LQR gain from the linearized Matrices
+
+MatrixXd computeGain(linearMatrix &linearMatrix, configuration &config);
 
 // This function computes the state and force errors (scaled), and returns a trade-off between the 2 errors in a different error vector
 
@@ -197,68 +224,9 @@ error computeError(state x_ref, feedback feedback, configuration config);
 
 accelerations computeAccelerations(const MatrixXd K, feedback feedback, state x_ref, configuration config, error &error, mc_rbdyn::Robots &robots);
 
-// Definition of the Control, Weight and Gain Matrices
-
-Matrix<double, 36, 36> A;
-Matrix<double, 36, 12> B;
-
-Matrix<double, 36, 36> M;
-Matrix<double, 36, 36> N;
+// Variables to compute and check while running the controller
 
 MatrixXd K_;
-
-// Definition of sub-Matrices to simplify the expression of the Control Matrices 
-
-Matrix3d A31, A32, A33, A34, A41, A42, A43, A44;
-Matrix3d F1_21, F1_23, F1_41, F1_42, F1_43, F1_44;
-Matrix3d F2_21, F2_23, F2_41, F2_42, F2_43, F2_44;
-Matrix3d T1_11, T1_12, T1_13, T1_14, T1_22, T1_24;
-Matrix3d T2_11, T2_12, T2_13, T2_14, T2_22, T2_24;
-Matrix3d V1_11, V1_13, V1_22, V1_24;
-Matrix3d V2_11, V2_13, V2_22, V2_24;
-
-Matrix<double, 12, 12> F0, F1, F2, D1, D2, T1, T2, V1, V2;
-Matrix<double, 12, 6> G1, G2;
-
-// Definition of Parameters to simplify the computation's expressions
-
-int m;
-Matrix3d I;
-Matrix3d KFP_1;
-Matrix3d KFD_1;
-Matrix3d KTP_1;
-Matrix3d KTD_1;
-Matrix3d KFP_2;
-Matrix3d KFD_2;
-Matrix3d KTP_2;
-Matrix3d KTD_2;
-
-Matrix3d Rsc_1;
-Matrix3d Rsc_2;
-
-Vector3d com;
-Matrix3d Rb;
-Vector3d com_d;
-Vector3d o_d;
-
-Vector3d pc_1;
-Matrix3d Rc_1;
-Vector3d pc_d_1;
-Vector3d oc_d_1;
-Vector3d fc_1;
-Vector3d tc_1;
-
-Vector3d pc_2;
-Matrix3d Rc_2;
-Vector3d pc_d_2;
-Vector3d oc_d_2;
-Vector3d fc_2;
-Vector3d tc_2;
-
-Matrix3d Rint_1;
-Matrix3d Cb_1;
-Matrix3d Rint_2;
-Matrix3d Cb_2;
 
 state x_ref_;
 
@@ -266,18 +234,83 @@ feedback feedback_;
 
 configuration config_;
 
+Matrix<double, 12, 1> f_delta_;
 error x_delta_;
-error f_delta_;
+error z_delta_;
 
 error error_;
 
 accelerations accelerations_;
 
-mc_rbdyn::Robots robots_;
-mc_rbdyn::Robots realRobots_;
+linearMatrix linearMatrix_;
 
-unsigned int robotIndex_;
+private:
+
+    // Definition of the Modified Linear Matrices after the trade-off between the state and force errors
+
+    Matrix<double, 36, 36> Ay;
+    Matrix<double, 36, 12> By;
+    Matrix<double, 36, 36> Qy;
+
+    Matrix<double, 36, 36> N;
+
+    // Definition of sub-Matrices to simplify the expression of the Control Matrices 
+
+    Matrix3d A31, A32, A33, A34, A41, A42, A43, A44;
+    Matrix3d F1_31, F1_33, F1_41, F1_42, F1_43, F1_44;
+    Matrix3d F2_31, F2_33, F2_41, F2_42, F2_43, F2_44;
+    Matrix3d T1_11, T1_12, T1_13, T1_14, T1_22, T1_24;
+    Matrix3d T2_11, T2_12, T2_13, T2_14, T2_22, T2_24;
+    Matrix3d V1_11, V1_13, V1_22, V1_24;
+    Matrix3d V2_11, V2_13, V2_22, V2_24;
+
+    Matrix<double, 12, 12> F0, F1, F2, D1, D2, T1, T2, V1, V2;
+    Matrix<double, 12, 6> G1, G2;
+
+    // Definition of Parameters to simplify the computation's expressions
+
+    double m;
+    Matrix3d I;
+    Matrix3d KFP_1;
+    Matrix3d KFD_1;
+    Matrix3d KTP_1;
+    Matrix3d KTD_1;
+    Matrix3d KFP_2;
+    Matrix3d KFD_2;
+    Matrix3d KTP_2;
+    Matrix3d KTD_2;
+
+    Matrix3d Rsc_1;
+    Matrix3d Rsc_2;
+
+    Vector3d com;
+    Matrix3d Rb;
+    Vector3d com_d;
+    Vector3d o_d;
+
+    Vector3d pc_1;
+    Matrix3d Rc_1;
+    Vector3d pc_d_1;
+    Vector3d oc_d_1;
+    Vector3d fc_1;
+    Vector3d tc_1;
+
+    Vector3d pc_2;
+    Matrix3d Rc_2;
+    Vector3d pc_d_2;
+    Vector3d oc_d_2;
+    Vector3d fc_2;
+    Vector3d tc_2;
+
+    Matrix3d Rint_1;
+    Matrix3d Cb_1;
+    Matrix3d Rint_2;
+    Matrix3d Cb_2;
+
+    mc_rbdyn::Robots robots_;
+    mc_rbdyn::Robots realRobots_;
+
+    unsigned int robotIndex_;
 
 }; // Struct Stabilizer
 } // Namespace msc_stabilizer
-} // Namespace mc_Tasks

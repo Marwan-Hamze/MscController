@@ -4,12 +4,15 @@
 #include <mc_control/fsm/Controller.h>
 #include <mc_rbdyn/Robots.h>
 #include <mc_tasks/CoMTask.h>
-#include <mc_tasks/SurfaceTransformTask.h>
+//#include <mc_tasks/SurfaceTransformTask.h>
+#include <mc_tasks/PositionTask.h>
+#include <mc_tasks/OrientationTask.h>
 #include "msc_stabilizer.h"
 
 #include "api.h"
 
 using Eigen::Matrix;
+using Eigen::Vector3d;
 
 struct MscController_DLLAPI MscController : public mc_control::fsm::Controller
 {
@@ -19,16 +22,23 @@ struct MscController_DLLAPI MscController : public mc_control::fsm::Controller
 
     void reset(const mc_control::ControllerResetData & reset_data) override;
 
-    void logs_robot(mc_rbdyn::Robots &robots);
-
 private:
     mc_rtc::Configuration config_;
-    Eigen::VectorXd comAcc;
-    sva::MotionVecd Gain;
-    sva::MotionVecd uRF, uLF, uB;
-    std::shared_ptr<mc_tasks::CoMTask> comTask;
-    std::shared_ptr<mc_tasks::msc_stabilizer::Stabilizer> stab_;
-    std::shared_ptr<mc_tasks::SurfaceTransformTask> rightFootTask_;
-    std::shared_ptr<mc_tasks::SurfaceTransformTask> leftFootTask_;
+    bool stabilizer = false;
+    bool flip = false;
+    
+    Vector3d fRF_, tRF_, fLF_, tLF_;
+
+    std::shared_ptr<msc_stabilizer::Stabilizer> stab_;
+
+    std::shared_ptr<mc_tasks::CoMTask> comTask_;
+    std::shared_ptr<mc_tasks::OrientationTask> baseTask_;
+
+    std::shared_ptr<mc_tasks::PositionTask> rightFoot_PosTask_;
+    std::shared_ptr<mc_tasks::OrientationTask> rightFoot_OrTask_;
+
+    std::shared_ptr<mc_tasks::PositionTask> leftFoot_PosTask_;
+    std::shared_ptr<mc_tasks::OrientationTask> leftFoot_OrTask_;
+
     std::string observerPipelineName_ = "MscControllerObserverPipeline";
 };

@@ -23,7 +23,7 @@ robots:
 # General constraints, always on
 constraints:
 - type: contact
-- type: dynamics
+- type: kinematics
   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
 # Collision constraint
@@ -36,10 +36,12 @@ contacts:
   r2: ground
   r1Surface: LeftFoot
   r2Surface: AllGround
+  dof: [0,0,0,0,0,0]
 - r1: jvrc1
   r2: ground
   r1Surface: RightFoot
   r2Surface: AllGround
+  dof: [0,0,0,0,0,0]
 
 # Some options for a specific robot
 jvrc1:
@@ -50,10 +52,58 @@ jvrc1:
     stiffness: 2
     weight: 100
 # Implement some additional text states
-states: {}
+states:
+  #Fix:
+  #  base: MetaTasks
+  #  tasks:
+  #    FixRightFoot:
+  #      type: bspline_trajectory
+  #      surface: RightFoot
+  #      stiffness: 50.0
+  #      weight: 500.0
+  #      targetSurface:
+  #          robot: ground
+  #          surface: AllGround
+  Lift:
+    base: MetaTasks
+    RemoveContacts:
+      - r1: jvrc1
+        r2: ground
+        r1Surface: LeftFoot
+        r2Surface: AllGround
+    tasks:
+      LiftLeftFoot:
+        type: bspline_trajectory
+        surface: LeftFoot
+        stiffness: 50.0
+        weight: 500.0     
+      # XXX would be nicer to target a surface on the environment
+        target:
+          translation: [0.017046, 0.25, 0.1]
+          rotation: [0.0, 0.0, 0.0]
+        completion:
+          AND:
+            - eval: 0.05
+            - speed: 1e-4
+#      controlPoints:
+#        - [0.017046, 0.08, 0.002]
+#        - [0.017046, 0.1, 0.08]
+#        - [0.017046, 0.12, 0.15]
+#  Test:
+#    base: Parallel
+#    states: [Lift, Fix]
+#    RemoveContacts:
+#      - r1: jvrc1
+#        r2: ground
+#        r1Surface: LeftFoot
+#        r2Surface: AllGround
+#  FeetContacts:
+#    base: Meta
+#    transitions:
+#      - [MscController_Initial, OK, LiftLF, Auto]
 # Transitions map
 transitions:
-- [MscController_Initial, OK, MscController_Initial, Strict]
+- [MscController_Initial, OK,  Lift, Auto]
 # Initial state
 init: MscController_Initial
 #Observer
@@ -63,11 +113,11 @@ ObserverPipelines:
   observers:
     - type: Encoder
       update: true
-    - type: Attitude
-      update: true
-#    - type: KinematicInertial
-#      update: true
-#        imuBodySensor: Accelerometer
+    #- type: Attitude
+    #  update: true
+    #- type: KinematicInertial
+    #  update: true
+    #    imuBodySensor: Accelerometer
     - type: BodySensor
       update: true
       config:
