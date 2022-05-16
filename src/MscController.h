@@ -27,7 +27,7 @@ private:
     bool stabilizer = false;
     bool flip = false;
     
-    Vector3d fRF_, tRF_, fLF_, tLF_;
+    Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
 
     std::shared_ptr<msc_stabilizer::Stabilizer> stab_;
 

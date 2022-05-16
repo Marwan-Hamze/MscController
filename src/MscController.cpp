@@ -22,15 +22,43 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   mc_rtc::log::success("MscController init done ");
 
+  com_ = com_.Zero();
+  theta_ = theta_.Zero();
+  comd_ = comd_.Zero();
+  om_ = om_.Zero();
+
+  pRF_ = pRF_.Zero();
+  thetaRF_ = thetaRF_.Zero();
+  vRF_ = vRF_.Zero();
+  omRF_ = omRF_.Zero();
   fRF_ = fRF_.Zero();
   tRF_ = tRF_.Zero();
+
+  pLF_ = pLF_.Zero();
+  thetaLF_ = thetaLF_.Zero();
+  vLF_ = vLF_.Zero();
+  omLF_ = omLF_.Zero();
   fLF_ = fLF_.Zero();
   tLF_ = tLF_.Zero();
 
-  logger().addLogEntry("Error_Force_RightFoot", [this]() { return fRF_; });
-  logger().addLogEntry("Error_Moment_RightFoot", [this]() { return tRF_; });
-  logger().addLogEntry("Error_Force_LeftFoot", [this]() { return fLF_; });
-  logger().addLogEntry("Error_Moment_LeftFoot", [this]() { return tLF_; });
+  logger().addLogEntry("Error_com_Position", [this]() { return com_; });
+  logger().addLogEntry("Error_com_Orientation", [this]() { return theta_; });
+  logger().addLogEntry("Error_com_Velocity", [this]() { return comd_; });
+  logger().addLogEntry("Error_com_AngVelocity", [this]() { return om_; });
+
+  logger().addLogEntry("Error_RightFoot_Position", [this]() { return pRF_; });
+  logger().addLogEntry("Error_RightFoot_Orientation", [this]() { return thetaRF_; });
+  logger().addLogEntry("Error_RightFoot_Velocity", [this]() { return vRF_; });
+  logger().addLogEntry("Error_RightFoot_AngVelocity", [this]() { return omRF_; });
+  logger().addLogEntry("Error_RightFoot_Force", [this]() { return fRF_; });
+  logger().addLogEntry("Error_RightFoot_Moment", [this]() { return tRF_; });
+
+  logger().addLogEntry("Error_LeftFoot_Position", [this]() { return pLF_; });
+  logger().addLogEntry("Error_LeftFoot_Orientation", [this]() { return thetaLF_; });
+  logger().addLogEntry("Error_LeftFoot_Velocity", [this]() { return vLF_; });
+  logger().addLogEntry("Error_LeftFoot_AngVelocity", [this]() { return omLF_; });
+  logger().addLogEntry("Error_LeftFoot_Force", [this]() { return fLF_; });
+  logger().addLogEntry("Error_LeftFoot_Moment", [this]() { return tLF_; });
 
 }
 
@@ -47,10 +75,10 @@ bool MscController::run()
     solver().addTask(comTask_);
     solver().addTask(baseTask_);
 
-    solver().addTask(rightFoot_PosTask_);
+    //solver().addTask(rightFoot_PosTask_);
     //solver().addTask(rightFoot_OrTask_);
 
-    solver().addTask(leftFoot_PosTask_);
+    //solver().addTask(leftFoot_PosTask_);
     //solver().addTask(leftFoot_OrTask_);
 
 
@@ -147,11 +175,10 @@ bool MscController::run()
     solver().removeTask(baseTask_);
 
     solver().removeTask(rightFoot_PosTask_);
-    //solver().removeTask(rightFoot_OrTask_);
+    solver().removeTask(rightFoot_OrTask_);
     
     solver().removeTask(leftFoot_PosTask_);
-    //solver().removeTask(leftFoot_OrTask_);
-
+    solver().removeTask(leftFoot_OrTask_);
 
     mc_rtc::log::success("Msc Stabilizer Disabled");
     }));
@@ -174,11 +201,24 @@ bool MscController::run()
   leftFoot_PosTask_->refAccel(stab_->accelerations_.LF_linAcc);
   leftFoot_OrTask_->refAccel(stab_->accelerations_.LF_angAcc);
 
+  com_ = stab_->x_delta_.block(0,0,3,1);
+  theta_ = stab_->x_delta_.block(3,0,3,1);
+  comd_ = stab_->x_delta_.block(6,0,3,1);
+  om_ = stab_->x_delta_.block(9,0,3,1);
+
+  pRF_ = stab_->x_delta_.block(12,0,3,1);
+  thetaRF_ = stab_->x_delta_.block(15,0,3,1);
+  vRF_ = stab_->x_delta_.block(18,0,3,1);
+  omRF_ = stab_->x_delta_.block(21,0,3,1);
   fRF_ = stab_->f_delta_.block(0,0,3,1);
   tRF_ = stab_->f_delta_.block(3,0,3,1);
+
+  pLF_ = stab_->x_delta_.block(24,0,3,1);
+  thetaLF_ = stab_->x_delta_.block(27,0,3,1);
+  vLF_ = stab_->x_delta_.block(30,0,3,1);
+  omLF_ = stab_->x_delta_.block(33,0,3,1);
   fLF_ = stab_->f_delta_.block(6,0,3,1);
   tLF_ = stab_->f_delta_.block(9,0,3,1);
-
   
   /* mc_rtc::log::info("From Ankle: \n {} \n", realRobots().robot().bodyWrench("L_ANKLE_P_S").moment());
   mc_rtc::log::info("From Surface: \n {} \n", realRobots().robot().surfaceWrench("LeftFoot").moment()); */

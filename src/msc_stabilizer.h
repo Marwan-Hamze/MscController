@@ -155,20 +155,20 @@ struct configuration {
 
     Matrix<double, 36, 12> N_xu;
 
-    Vector3d qcom_p {1, 1, 1};
+    Vector3d qcom_p {30000, 30000, 30000};
     Vector3d qcom_R {1, 1, 1};
-    Vector3d qcom_vel {1, 1, 1};
-    Vector3d qcom_angvel {1, 1, 1};
+    Vector3d qcom_vel {30000, 30000, 30000};
+    Vector3d qcom_angvel {30000, 30000, 30000};
 
-    Vector3d qRF_p {1, 1, 1};
+    Vector3d qRF_p {30000, 30000, 30000};
     Vector3d qRF_R {1, 1, 1};
-    Vector3d qRF_vel {1, 1, 1};
-    Vector3d qRF_angvel {1, 1, 1};
+    Vector3d qRF_vel {30000, 30000, 30000};
+    Vector3d qRF_angvel {30000, 30000, 30000};
 
-    Vector3d qLF_p {1, 1, 1};
+    Vector3d qLF_p {30000, 30000, 30000};
     Vector3d qLF_R {1, 1, 1};
-    Vector3d qLF_vel {1, 1, 1};
-    Vector3d qLF_angvel {1, 1, 1};
+    Vector3d qLF_vel {30000, 30000, 30000};
+    Vector3d qLF_angvel {30000, 30000, 30000};
 
     Vector3d rRF_lacc {1, 1, 1};
     Vector3d rRF_aacc {1, 1, 1};
@@ -218,11 +218,11 @@ MatrixXd computeGain(linearMatrix &linearMatrix, configuration &config);
 
 // This function computes the state and force errors (scaled), and returns a trade-off between the 2 errors in a different error vector
 
-error computeError(state x_ref, feedback feedback, configuration config);
+error computeError(state &x_ref, feedback &feedback, configuration &config);
 
 // This function generates the accelerations written in the world frame for the contact tasks
 
-accelerations computeAccelerations(const MatrixXd K, feedback feedback, state x_ref, configuration config, error &error, mc_rbdyn::Robots &robots);
+accelerations computeAccelerations(const MatrixXd &K, feedback &feedback, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots);
 
 // Variables to compute and check while running the controller
 

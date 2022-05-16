@@ -486,7 +486,7 @@ return K;
 
 }
 
-Stabilizer::error Stabilizer::computeError(state x_ref, feedback feedback, configuration config){
+Stabilizer::error Stabilizer::computeError(state &x_ref, feedback &feedback, configuration &config){
 
 error error;
 
@@ -528,7 +528,7 @@ return error;
 
 // Feet tasks generation
 
-Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd K, feedback fd, state x_ref, configuration config, error &error, mc_rbdyn::Robots &robots){
+Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd &K, feedback &fd, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots){
 
 accelerations accelerations;
 
