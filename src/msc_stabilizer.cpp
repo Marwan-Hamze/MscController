@@ -548,22 +548,22 @@ oc_dd_2 << ub(9), ub(10), ub(11);
 /*  Generating com and base accelerations, using:
 
  ddcom = Kp(com - com_ref) + Kd(dcom - dcom_ref) + ddcom_ref
- dwb = Kp* Mat2Ang(R * R_ref') + Kd(wb - wb_ref) + dwb_ref */
+ dwb = Kp* Mat2Ang(R * R_ref') + Kd(wb - wb_ref) + dwb_ref 
+ 
+ Since ddcom_ref = dwb_ref = 0 as the reference state is a static equilibrium state, I did not add them in the calculations below*/
 
 accelerations.ddcom = - config.Kp * (robots.robot().com() - x_ref.CoM.pos) - config.Kd * (robots.robot().comVelocity() - x_ref.CoM.vel);
 accelerations.dwb = - config.Kp * Mat2Ang(robots.robot().posW().rotation().transpose() * x_ref.CoM.R.transpose()) - config.Kd * (robots.robot().bodyVelW("base_link").angular() - x_ref.CoM.angvel);
-
-//accelerations.acc << accelerations.ddcom, accelerations.dwb;
  
 /* Transforming the accelerations from the base frame to the world frame, using:
 
   pc_dd = Rb*pc_dd_b - S^2(wb)*(pc-com) + S(dwb)*(pc - com) + 2S(wb)(pc_d-dcom) + ddcom;
   oc_dd = Rb*oc_dd_b + S(wb)*(oc_d - wb) + dwb; */
 
-u.block(0,0,3,1) = fd.R * pc_dd_1 - S(fd.x.CoM.angvel) * S(fd.x.CoM.angvel) * (fd.pc_1 - fd.x.CoM.pos) - S(accelerations.dwb) * (fd.pc_1 - fd.x.CoM.pos)
+u.block(0,0,3,1) = fd.R * pc_dd_1 - S(fd.x.CoM.angvel) * S(fd.x.CoM.angvel) * (fd.pc_1 - fd.x.CoM.pos) + S(accelerations.dwb) * (fd.pc_1 - fd.x.CoM.pos)
 + 2 * S(fd.x.CoM.angvel) * (fd.pc_d_1 - fd.x.CoM.vel) + accelerations.ddcom;
 u.block(3,0,3,1) = fd.R * oc_dd_1 + S(fd.x.CoM.angvel) * (fd.oc_d_1 - fd.x.CoM.angvel) + accelerations.dwb;
-u.block(6,0,3,1) = fd.R * pc_dd_2 - S(fd.x.CoM.angvel) * S(fd.x.CoM.angvel) * (fd.pc_2 - fd.x.CoM.pos) - S(accelerations.dwb) * (fd.pc_2 - fd.x.CoM.pos)
+u.block(6,0,3,1) = fd.R * pc_dd_2 - S(fd.x.CoM.angvel) * S(fd.x.CoM.angvel) * (fd.pc_2 - fd.x.CoM.pos) + S(accelerations.dwb) * (fd.pc_2 - fd.x.CoM.pos)
 + 2 * S(fd.x.CoM.angvel) * (fd.pc_d_2 - fd.x.CoM.vel) + accelerations.ddcom;
 u.block(9,0,3,1) = fd.R * oc_dd_2 + S(fd.x.CoM.angvel) * (fd.oc_d_2 - fd.x.CoM.angvel) + accelerations.dwb;
 

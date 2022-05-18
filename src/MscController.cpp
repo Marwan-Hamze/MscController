@@ -1,5 +1,4 @@
 #include "MscController.h"
-#include <mc_rtc/gui/plot.h>
 
 MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config)
@@ -12,11 +11,11 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), 0, 0, 10);
   baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 10);
 
-  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 0, 500);
-  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 0, 500);
+  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 10, 500);
+  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 10, 500);
 
-  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_P_S", robots(), robots().robot().robotIndex(), 0, 500);
-  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_P_S", robots(), robots().robot().robotIndex(), 0, 500);
+  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_P_S", robots(), robots().robot().robotIndex(), 10, 500);
+  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_P_S", robots(), robots().robot().robotIndex(), 10, 500);
 
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex()));
 
@@ -75,11 +74,11 @@ bool MscController::run()
     solver().addTask(comTask_);
     solver().addTask(baseTask_);
 
-    //solver().addTask(rightFoot_PosTask_);
-    //solver().addTask(rightFoot_OrTask_);
+    solver().addTask(rightFoot_PosTask_);
+    solver().addTask(rightFoot_OrTask_);
 
-    //solver().addTask(leftFoot_PosTask_);
-    //solver().addTask(leftFoot_OrTask_);
+    solver().addTask(leftFoot_PosTask_);
+    solver().addTask(leftFoot_OrTask_);
 
 
     mc_rtc::log::success("Msc Stabilizer Enabled");
@@ -199,7 +198,7 @@ bool MscController::run()
   rightFoot_OrTask_->refAccel(stab_->accelerations_.RF_angAcc);
   
   leftFoot_PosTask_->refAccel(stab_->accelerations_.LF_linAcc);
-  leftFoot_OrTask_->refAccel(stab_->accelerations_.LF_angAcc);
+  leftFoot_OrTask_->refAccel(stab_->accelerations_.LF_angAcc );
 
   com_ = stab_->x_delta_.block(0,0,3,1);
   theta_ = stab_->x_delta_.block(3,0,3,1);
