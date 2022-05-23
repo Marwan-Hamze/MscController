@@ -113,12 +113,12 @@ ObserverPipelines:
   observers:
     - type: Encoder
       update: true
-    #- type: Attitude
-    #  update: true
+    - type: Attitude
+      update: true
     #- type: KinematicInertial
     #  update: true
     #    imuBodySensor: Accelerometer
     - type: BodySensor
-      update: true
+      update: false
       config:
         bodySensor: FloatingBase

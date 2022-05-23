@@ -119,20 +119,20 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {30000, 30000, 30000};
+        Vector3d qcom_p {1, 1, 1};
         Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {30000, 30000, 30000};
-        Vector3d qcom_angvel {30000, 30000, 30000};
+        Vector3d qcom_vel {1, 1, 1};
+        Vector3d qcom_angvel {1, 1, 1};
 
-        Vector3d qRF_p {30000, 30000, 30000};
+        Vector3d qRF_p {1, 1, 1};
         Vector3d qRF_R {1, 1, 1};
-        Vector3d qRF_vel {30000, 30000, 30000};
-        Vector3d qRF_angvel {30000, 30000, 30000};
+        Vector3d qRF_vel {1, 1, 1};
+        Vector3d qRF_angvel {1, 1, 1};
 
-        Vector3d qLF_p {30000, 30000, 30000};
+        Vector3d qLF_p {1, 1, 1};
         Vector3d qLF_R {1, 1, 1};
-        Vector3d qLF_vel {30000, 30000, 30000};
-        Vector3d qLF_angvel {30000, 30000, 30000};
+        Vector3d qLF_vel {1, 1, 1};
+        Vector3d qLF_angvel {1, 1, 1};
 
         Vector3d rRF_lacc {1, 1, 1};
         Vector3d rRF_aacc {1, 1, 1};
@@ -153,6 +153,8 @@ protected:
 
         Matrix3d Kp, Kd;
 
+        double dt = 0.005;
+
     };
 
 public:
@@ -172,11 +174,11 @@ public:
      * @param N Weight matrix penalizing state / control pairs
      * @return K, the Generated Gain matrix (has to be a double/dynamic size
      * matrix!). 
-     * @param numIT Number of Iterations to compute K
+     * @param eps Number of Iterations to compute K
      */
 
     MatrixXd lqrGain(MatrixXd A, MatrixXd B, MatrixXd Q, MatrixXd R,
-                        MatrixXd N, int numIT = 9);
+                        MatrixXd N, double eps = 0.1);
 
 
     // This function computes the skew symmetric matrix of a given 3D vector

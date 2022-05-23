@@ -115,6 +115,15 @@ bool MscController::run()
   gui()->addElement({"Stabilizer","Tuning Q"}, mc_rtc::gui::ArrayInput("LF_angvel", [this]() {
     return stab_->config_.qLF_angvel; }, [this](Eigen::Vector3d LF_angvel){ stab_->config_.qLF_angvel = LF_angvel; }));
 
+  gui()->addElement({"Stabilizer","Tuning Q"}, mc_rtc::gui::Button("Update", [this]() {
+    
+    stab_->reconfigure(stab_->config_);
+    stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_);
+
+    mc_rtc::log::info("The Matrix Q and the LQR Gain are Updated \n");
+
+    }));
+  
   gui()->addElement({"Stabilizer","Tuning Q"}, mc_rtc::gui::Button("Check Q", [this]() {
     
     mc_rtc::log::info("Q = \n{}\n" , stab_->config_.Q);
@@ -133,6 +142,15 @@ bool MscController::run()
   gui()->addElement({"Stabilizer","Tuning R"}, mc_rtc::gui::ArrayInput("LF_aacc", [this]() {
     return stab_->config_.rLF_aacc; }, [this](Eigen::Vector3d LF_aacc){ stab_->config_.rLF_aacc = LF_aacc; }));
 
+  gui()->addElement({"Stabilizer","Tuning R"}, mc_rtc::gui::Button("Update", [this]() {
+    
+    stab_->reconfigure(stab_->config_);
+    stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_);
+
+    mc_rtc::log::info("The Matrix R and the LQR Gain are Updated \n");
+
+    }));
+
   gui()->addElement({"Stabilizer","Tuning R"}, mc_rtc::gui::Button("Check R", [this]() {
     
     mc_rtc::log::info("R = \n{}\n" , stab_->config_.R);
@@ -150,6 +168,15 @@ bool MscController::run()
     return stab_->config_.wf_LF; }, [this](Eigen::Vector3d fc_LF){ stab_->config_.wf_LF = fc_LF; }));
   gui()->addElement({"Stabilizer","Tuning W"}, mc_rtc::gui::ArrayInput("tc_LF", [this]() {
     return stab_->config_.wt_LF; }, [this](Eigen::Vector3d tc_LF){ stab_->config_.wt_LF = tc_LF; }));
+
+  gui()->addElement({"Stabilizer","Tuning W"}, mc_rtc::gui::Button("Update", [this]() {
+    
+    stab_->reconfigure(stab_->config_);
+    stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_);
+
+    mc_rtc::log::info("The Matrix W and the LQR Gain are Updated \n");
+
+    }));
 
   gui()->addElement({"Stabilizer","Tuning W"}, mc_rtc::gui::Button("Check W", [this]() {
     
@@ -185,11 +212,11 @@ bool MscController::run()
   flip = false;
   }
 
-  stab_->reconfigure(stab_->config_);
-  stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_); 
-  stab_->feedback_ = stab_->getFeedback(realRobots());
+  //stab_->reconfigure(stab_->config_);
+
+  stab_->feedback_ = stab_->getFeedback(robots());
   stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->config_);
-  stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, realRobots());
+  stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, robots());
 
   comTask_->refAccel(stab_->accelerations_.ddcom);
   baseTask_->refAccel(stab_->accelerations_.dwb);
@@ -198,7 +225,7 @@ bool MscController::run()
   rightFoot_OrTask_->refAccel(stab_->accelerations_.RF_angAcc);
   
   leftFoot_PosTask_->refAccel(stab_->accelerations_.LF_linAcc);
-  leftFoot_OrTask_->refAccel(stab_->accelerations_.LF_angAcc );
+  leftFoot_OrTask_->refAccel(stab_->accelerations_.LF_angAcc);
 
   com_ = stab_->x_delta_.block(0,0,3,1);
   theta_ = stab_->x_delta_.block(3,0,3,1);
@@ -219,8 +246,13 @@ bool MscController::run()
   fLF_ = stab_->f_delta_.block(6,0,3,1);
   tLF_ = stab_->f_delta_.block(9,0,3,1);
   
-  /* mc_rtc::log::info("From Ankle: \n {} \n", realRobots().robot().bodyWrench("L_ANKLE_P_S").moment());
-  mc_rtc::log::info("From Surface: \n {} \n", realRobots().robot().surfaceWrench("LeftFoot").moment()); */
+  //mc_rtc::log::info("Forces Fake Robot: \n{}\n", robots().robot().bodyWrench("L_ANKLE_P_S").force());
+  //mc_rtc::log::info("Transformation Surface-Ankle Rotation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().rotation().transpose());
+  //mc_rtc::log::info("Transformation Surface-Ankle Left - Translation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().translation());
+  //mc_rtc::log::info("Transformation Surface-Ankle Right - Translation: \n{}\n", realRobots().robot().surface("RightFoot").X_b_s().translation());
+
+  /* mc_rtc::log::info("From Ankle: \n{}\n", realRobots().robot().bodyWrench("L_ANKLE_P_S").moment());
+  mc_rtc::log::info("From Surface: \n{}\n", realRobots().robot().surfaceWrench("LeftFoot").moment()); */
 
   return mc_control::fsm::Controller::run();
 }
@@ -242,14 +274,16 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   
   if(observerp.success())
   {
-    mc_rtc::log::success("Pipeline \"{}\" for real robot observation loaded!", observerPipelineName_);
+    mc_rtc::log::info("Pipeline \"{}\" for real robot observation loaded!", observerPipelineName_);
   }
 
   stab_->config_ = stab_->configure(realRobots());
   stab_->x_ref_ = stab_->reference(realRobots());
   stab_->linearMatrix_ = stab_->computeMatrix(stab_->x_ref_, stab_->config_);
+  stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_); 
 
   mc_rtc::log::info("Reference obtained from the Robot\n");
+  mc_rtc::log::info("LQR Gain Calculated\n");
 
   gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check Accelerations", [this]() {
     

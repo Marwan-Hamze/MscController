@@ -21,7 +21,7 @@ Stabilizer::Stabilizer(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots, u
 // LQR function
 
 MatrixXd Stabilizer::lqrGain(MatrixXd A, MatrixXd B, MatrixXd Q, MatrixXd R,
-                    MatrixXd N, int numIT) {
+                    MatrixXd N, double eps) {
 
   MatrixXd K;
   // check if dimensions are compatible
@@ -43,19 +43,22 @@ MatrixXd Stabilizer::lqrGain(MatrixXd A, MatrixXd B, MatrixXd Q, MatrixXd R,
   MatrixXd P;
   MatrixXd Pold = Q;
 
-  // iterate for eps number of iterations
-  unsigned int numIterations = 0;
+  // iterate until P converges
+ 
   while (true) {
-    numIterations++;
 
     // compute new P
     P = Acal_T * Pold * Acal -
         Acal_T * Pold * B * (R + B_T * Pold * B).inverse() * B_T * Pold * Acal + Qcal;
 
+    // update delta
+    MatrixXd delta = P - Pold;
+
     // Check the number of Iterations and finish
-    if (fabs(numIterations) > numIT) {
+    if (fabs(delta.maxCoeff()) < eps) {
       break;
     }
+
     Pold = P;
   }
 
@@ -150,16 +153,16 @@ config.W.block(24,24,3,3).diagonal() = config.wf_LF;
 config.W.block(27,27,3,3).diagonal() = config.wt_LF;
 
 config.KFP_RF << 30000, 0, 0, 0, 30000, 0, 0, 0, 30000;
-config.KFD_RF << 1000, 0, 0, 0, 1000, 0, 0, 0, 1000;
-config.KTP_RF << 800, 0, 0, 0, 800, 0, 0, 0, 800;
-config.KTD_RF << 50, 0, 0, 0, 50, 0, 0, 0, 50;
+config.KFD_RF << 100, 0, 0, 0, 100, 0, 0, 0, 100;
+config.KTP_RF << 400, 0, 0, 0, 400, 0, 0, 0, 400;
+config.KTD_RF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_RF = robots.robot().bodyPosW("R_ANKLE_P_S").rotation().transpose();
 
 config.KFP_LF << 30000, 0, 0, 0, 30000, 0, 0, 0, 30000;
-config.KFD_LF << 1000, 0, 0, 0, 1000, 0, 0, 0, 1000;
-config.KTP_LF << 800, 0, 0, 0, 800, 0, 0, 0, 800;
-config.KTD_LF << 50, 0, 0, 0, 50, 0, 0, 0, 50;
+config.KFD_LF << 100, 0, 0, 0, 100, 0, 0, 0, 100;
+config.KTP_LF << 400, 0, 0, 0, 400, 0, 0, 0, 400;
+config.KTD_LF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_P_S").rotation().transpose();
 
@@ -480,7 +483,7 @@ Qy = N.inverse().transpose() * config.Q * N.inverse();
 
 MatrixXd K;
 
-K = Stabilizer::lqrGain(Ay, By, Qy, config.R, config.N_xu);
+K = Stabilizer::lqrGain(config.dt * Ay + config.Id36, config.dt * By, Qy, config.R, config.N_xu);
 
 return K;
 
