@@ -2,9 +2,7 @@
 
 #include <mc_control/mc_controller.h>
 #include <mc_control/fsm/Controller.h>
-#include <mc_rbdyn/Robots.h>
 #include <mc_tasks/CoMTask.h>
-//#include <mc_tasks/SurfaceTransformTask.h>
 #include <mc_tasks/PositionTask.h>
 #include <mc_tasks/OrientationTask.h>
 #include "msc_stabilizer.h"
@@ -39,6 +37,6 @@ private:
 
     std::shared_ptr<mc_tasks::PositionTask> leftFoot_PosTask_;
     std::shared_ptr<mc_tasks::OrientationTask> leftFoot_OrTask_;
-
+    
     std::string observerPipelineName_ = "MscControllerObserverPipeline";
 };

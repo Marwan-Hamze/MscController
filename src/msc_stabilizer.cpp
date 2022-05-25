@@ -166,7 +166,7 @@ config.KTD_LF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_P_S").rotation().transpose();
 
-config.Kp << 0, 0, 0, 0, 0, 0, 0, 0, 0;
+config.Kp << 20, 0, 0, 0, 20, 0, 0, 0, 20;
 config.Kd << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 return config;
@@ -480,6 +480,7 @@ By = N * linearMatrix.B;
 Qy = N.inverse().transpose() * config.Q * N.inverse();
 
 // Computing the Control Gain
+// As the LQR calculation is discrete for an infinite horizon, we should use the matrices Ay and By in their discrete form 
 
 MatrixXd K;
 
