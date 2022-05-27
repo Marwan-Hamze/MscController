@@ -69,7 +69,46 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 bool MscController::run()
 {
 
-  if(!stabilizer && !flip) {
+    if (init && !main) {
+
+    gui()->removeCategory({"Stabilizer","Initialization"});
+    gui()->removeCategory({"Stabilizer","FSM"});
+
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check Accelerations", [this]() {
+      
+      mc_rtc::log::info("CoM Linear Acceleration = \n{}\n" , stab_->accelerations_.ddcom);
+      mc_rtc::log::info("Base Angular Acceleration = \n{}\n" , stab_->accelerations_.dwb);
+    
+      mc_rtc::log::info("RightFoot Linear Acceleration = \n{}\n" , stab_->accelerations_.RF_linAcc);
+      mc_rtc::log::info("RightFoot Angular Acceleration = \n{}\n" , stab_->accelerations_.RF_angAcc);
+
+      mc_rtc::log::info("LeftFoot Linear Acceleration = \n{}\n" , stab_->accelerations_.LF_linAcc);
+      mc_rtc::log::info("LeftFoot Angular Acceleration = \n{}\n" , stab_->accelerations_.LF_angAcc);
+
+      }));
+
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The Error Vector", [this]() {
+      
+      mc_rtc::log::info("Error = \n{}\n" , stab_->error_);
+
+      }));
+
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The State Error", [this]() {
+      
+      mc_rtc::log::info("State Error = \n{}\n" , stab_->x_delta_);
+
+      }));
+
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The Force Error", [this]() {
+      
+      mc_rtc::log::info("Force Error = \n{}\n" , stab_->f_delta_);
+
+      }));
+
+    main = true;
+  }
+
+  if(!stabilizer && !flip && init) {
     
   gui()->removeElement({"Stabilizer","Main"}, "Disable");
   gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Enable", [this]() {
@@ -191,7 +230,7 @@ bool MscController::run()
   flip = true;
    }
 
-  else if (stabilizer && flip) {
+  else if (stabilizer && flip && init) {
 
   gui()->removeElement({"Stabilizer","Main"}, "Enable");
   gui()->removeCategory({"Stabilizer","Tuning Q"});
@@ -217,45 +256,47 @@ bool MscController::run()
   flip = false;
   }
 
-  stab_->feedback_ = stab_->getFeedback(realRobots());
-  stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->config_);
-  stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, realRobots());
+  if (init) {
+    stab_->feedback_ = stab_->getFeedback(realRobots());
+    stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->config_);
+    stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, realRobots());
 
-  comTask_->refAccel(stab_->accelerations_.ddcom);
-  baseTask_->refAccel(stab_->accelerations_.dwb);
+    comTask_->refAccel(stab_->accelerations_.ddcom);
+    baseTask_->refAccel(stab_->accelerations_.dwb);
 
-  rightFoot_PosTask_->refAccel(stab_->accelerations_.RF_linAcc);
-  rightFoot_OrTask_->refAccel(stab_->accelerations_.RF_angAcc);
-  
-  leftFoot_PosTask_->refAccel(stab_->accelerations_.LF_linAcc);
-  leftFoot_OrTask_->refAccel(stab_->accelerations_.LF_angAcc);
+    rightFoot_PosTask_->refAccel(stab_->accelerations_.RF_linAcc);
+    rightFoot_OrTask_->refAccel(stab_->accelerations_.RF_angAcc);
+    
+    leftFoot_PosTask_->refAccel(stab_->accelerations_.LF_linAcc);
+    leftFoot_OrTask_->refAccel(stab_->accelerations_.LF_angAcc);
 
-  com_ = stab_->x_delta_.block(0,0,3,1);
-  theta_ = stab_->x_delta_.block(3,0,3,1);
-  comd_ = stab_->x_delta_.block(6,0,3,1);
-  om_ = stab_->x_delta_.block(9,0,3,1);
+    com_ = stab_->x_delta_.block(0,0,3,1);
+    theta_ = stab_->x_delta_.block(3,0,3,1);
+    comd_ = stab_->x_delta_.block(6,0,3,1);
+    om_ = stab_->x_delta_.block(9,0,3,1);
 
-  pRF_ = stab_->x_delta_.block(12,0,3,1);
-  thetaRF_ = stab_->x_delta_.block(15,0,3,1);
-  vRF_ = stab_->x_delta_.block(18,0,3,1);
-  omRF_ = stab_->x_delta_.block(21,0,3,1);
-  fRF_ = stab_->f_delta_.block(0,0,3,1);
-  tRF_ = stab_->f_delta_.block(3,0,3,1);
+    pRF_ = stab_->x_delta_.block(12,0,3,1);
+    thetaRF_ = stab_->x_delta_.block(15,0,3,1);
+    vRF_ = stab_->x_delta_.block(18,0,3,1);
+    omRF_ = stab_->x_delta_.block(21,0,3,1);
+    fRF_ = stab_->f_delta_.block(0,0,3,1);
+    tRF_ = stab_->f_delta_.block(3,0,3,1);
 
-  pLF_ = stab_->x_delta_.block(24,0,3,1);
-  thetaLF_ = stab_->x_delta_.block(27,0,3,1);
-  vLF_ = stab_->x_delta_.block(30,0,3,1);
-  omLF_ = stab_->x_delta_.block(33,0,3,1);
-  fLF_ = stab_->f_delta_.block(6,0,3,1);
-  tLF_ = stab_->f_delta_.block(9,0,3,1);
+    pLF_ = stab_->x_delta_.block(24,0,3,1);
+    thetaLF_ = stab_->x_delta_.block(27,0,3,1);
+    vLF_ = stab_->x_delta_.block(30,0,3,1);
+    omLF_ = stab_->x_delta_.block(33,0,3,1);
+    fLF_ = stab_->f_delta_.block(6,0,3,1);
+    tLF_ = stab_->f_delta_.block(9,0,3,1);
 
-  //mc_rtc::log::info("Forces Fake Robot: \n{}\n", robots().robot().bodyWrench("L_ANKLE_P_S").force());
-  //mc_rtc::log::info("Transformation Surface-Ankle Rotation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().rotation().transpose());
-  //mc_rtc::log::info("Transformation Surface-Ankle Left - Translation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().translation());
-  //mc_rtc::log::info("Transformation Surface-Ankle Right - Translation: \n{}\n", realRobots().robot().surface("RightFoot").X_b_s().translation());
+    //mc_rtc::log::info("Forces Fake Robot: \n{}\n", robots().robot().bodyWrench("L_ANKLE_P_S").force());
+    //mc_rtc::log::info("Transformation Surface-Ankle Rotation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().rotation().transpose());
+    //mc_rtc::log::info("Transformation Surface-Ankle Left - Translation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().translation());
+    //mc_rtc::log::info("Transformation Surface-Ankle Right - Translation: \n{}\n", realRobots().robot().surface("RightFoot").X_b_s().translation());
 
-  /* mc_rtc::log::info("From Ankle: \n{}\n", realRobots().robot().bodyWrench("L_ANKLE_P_S").moment());
-  mc_rtc::log::info("From Surface: \n{}\n", realRobots().robot().surfaceWrench("LeftFoot").moment()); */
+    /* mc_rtc::log::info("From Ankle: \n{}\n", realRobots().robot().bodyWrench("L_ANKLE_P_S").moment());
+    mc_rtc::log::info("From Surface: \n{}\n", realRobots().robot().surfaceWrench("LeftFoot").moment()); */
+  }
 
   return mc_control::fsm::Controller::run();
 }
@@ -280,43 +321,21 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
     mc_rtc::log::info("Pipeline \"{}\" for real robot observation loaded!", observerPipelineName_);
   }
 
-  stab_->config_ = stab_->configure(realRobots());
-  stab_->x_ref_ = stab_->reference(realRobots());
-  stab_->linearMatrix_ = stab_->computeMatrix(stab_->x_ref_, stab_->config_);
-  stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_); 
+  if (!init) {
+    gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Initialize", [this]() {
 
-  mc_rtc::log::info("Reference obtained from the Robot\n");
-  mc_rtc::log::info("LQR Gain Calculated\n");
+      stab_->config_ = stab_->configure(realRobots());
+      stab_->x_ref_ = stab_->reference(realRobots());
+      stab_->linearMatrix_ = stab_->computeMatrix(stab_->x_ref_, stab_->config_);
+      stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_); 
 
-  gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check Accelerations", [this]() {
-    
-    mc_rtc::log::info("CoM Linear Acceleration = \n{}\n" , stab_->accelerations_.ddcom);
-    mc_rtc::log::info("Base Angular Acceleration = \n{}\n" , stab_->accelerations_.dwb);
-   
-    mc_rtc::log::info("RightFoot Linear Acceleration = \n{}\n" , stab_->accelerations_.RF_linAcc);
-    mc_rtc::log::info("RightFoot Angular Acceleration = \n{}\n" , stab_->accelerations_.RF_angAcc);
+      mc_rtc::log::info("Configuration Initialized\n");
+      mc_rtc::log::info("Reference obtained from the Robot\n");
+      mc_rtc::log::info("LQR Gain Calculated\n");
 
-    mc_rtc::log::info("LeftFoot Linear Acceleration = \n{}\n" , stab_->accelerations_.LF_linAcc);
-    mc_rtc::log::info("LeftFoot Angular Acceleration = \n{}\n" , stab_->accelerations_.LF_angAcc);
+      init = true;
 
-    }));
-
-  gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The Error Vector", [this]() {
-    
-    mc_rtc::log::info("Error = \n{}\n" , stab_->error_);
-
-    }));
-
-  gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The State Error", [this]() {
-    
-    mc_rtc::log::info("State Error = \n{}\n" , stab_->x_delta_);
-
-    }));
-
-  gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The Force Error", [this]() {
-    
-    mc_rtc::log::info("Force Error = \n{}\n" , stab_->f_delta_);
-
-    }));
+   }));
+  }
 
 }

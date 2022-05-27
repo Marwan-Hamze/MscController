@@ -24,6 +24,8 @@ private:
     mc_rtc::Configuration config_;
     bool stabilizer = false;
     bool flip = false;
+    bool init = false;
+    bool main = false;
     
     Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
 

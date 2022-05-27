@@ -8,7 +8,7 @@ void MscController_Initial::configure(const mc_rtc::Configuration & config)
 
 void MscController_Initial::start(mc_control::fsm::Controller & ctl_)
 {
-    ctl_.gui()->addElement({"Stabilizer","FSM"}, mc_rtc::gui::Button("Lift Left Foot", [this]() { start_ = true; }));
+    ctl_.gui()->addElement({"Stabilizer","FSM"}, mc_rtc::gui::Button("Move Right Hand", [this]() { start_ = true; }));
 
 }
 
