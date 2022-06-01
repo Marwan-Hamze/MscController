@@ -58,8 +58,21 @@ jvrc1:
     weight: 100
 # Implement some additional text states
 states:
-  MoveRH:
+  StandingBase:
     base: MetaTasks
+    tasks:
+      CoM:
+        type: com
+        above: [LeftFoot, RightFoot]
+        weight: 2000
+        stiffness: 5
+      KeepChest:
+        type: orientation
+        body: WAIST_R_S
+        weight: 1000
+        stiffness: 1
+  MoveRH:
+    base: StandingBase
     tasks:
       MoveRightHand:
         type: bspline_trajectory
@@ -75,25 +88,12 @@ states:
           timeElapsed: true
         # XXX would be better to target a surface on the environment
         target:
-          translation: [0.3, -0.35, 0.95]
-          rotation: [-0.908, 0.0, 1.57]
-        controlPoints:
-          - [0.0, -0.5, 0.85]
-          # - [0.0, -0.5, 0.85]
-        oriWaypoints:
-          - [3.5, [-0.785, 0.0, 1.57]]
-#  Test:
-#    base: Parallel
-#    states: [Lift, Fix]
-#    RemoveContacts:
-#      - r1: jvrc1
-#        r2: ground
-#        r1Surface: LeftFoot
-#        r2Surface: AllGround
-#  FeetContacts:
-#    base: Meta
-#    transitions:
-#      - [MscController_Initial, OK, LiftLF, Auto]
+          translation: [0.35, -0.35, 0.95]
+          rotation: [3.1416, -0.7854, 0.0]
+       # controlPoints:
+        #  - [0.0, -0.5, 0.85]
+        #oriWaypoints:
+        #  - [3.5, [-0.785, 0.0, 1.57]]
 # Transitions map
 transitions:
 - [MscController_Initial, OK,  MoveRH, Auto]

@@ -139,10 +139,10 @@ protected:
         Vector3d rLF_lacc {1, 1, 1};
         Vector3d rLF_aacc {1, 1, 1};
 
-        Vector3d wf_RF {0.8, 0.8, 0.8};
-        Vector3d wt_RF {0, 0, 0};
-        Vector3d wf_LF {0.8, 0.8, 0.8};
-        Vector3d wt_LF {0, 0, 0};
+        Vector3d wf_RF {0.5, 0.5, 0};
+        Vector3d wt_RF {0, 0, 0.5};
+        Vector3d wf_LF {0.5, 0.5, 0};
+        Vector3d wt_LF {0, 0, 0.5};
 
         Matrix3d KFP_RF, KFP_LF;
         Matrix3d KFD_RF, KFD_LF;

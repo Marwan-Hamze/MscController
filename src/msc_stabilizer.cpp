@@ -166,7 +166,7 @@ config.KTD_LF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_P_S").rotation().transpose();
 
-config.Kp << 20, 0, 0, 0, 20, 0, 0, 0, 20;
+config.Kp << 0, 0, 0, 0, 0, 0, 0, 0, 0;
 config.Kd << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 return config;
