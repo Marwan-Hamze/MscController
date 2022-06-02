@@ -124,14 +124,14 @@ protected:
         Vector3d qcom_vel {1, 1, 1};
         Vector3d qcom_angvel {1, 1, 1};
 
-        Vector3d qRF_p {1, 1, 1};
+        Vector3d qRF_p {100000, 100000, 100000};
         Vector3d qRF_R {1, 1, 1};
-        Vector3d qRF_vel {1, 1, 1};
+        Vector3d qRF_vel {100000, 100000, 100000};
         Vector3d qRF_angvel {1, 1, 1};
 
-        Vector3d qLF_p {1, 1, 1};
+        Vector3d qLF_p {100000, 100000, 100000};
         Vector3d qLF_R {1, 1, 1};
-        Vector3d qLF_vel {1, 1, 1};
+        Vector3d qLF_vel {100000, 100000, 100000};
         Vector3d qLF_angvel {1, 1, 1};
 
         Vector3d rRF_lacc {1, 1, 1};
@@ -139,10 +139,10 @@ protected:
         Vector3d rLF_lacc {1, 1, 1};
         Vector3d rLF_aacc {1, 1, 1};
 
-        Vector3d wf_RF {0.5, 0.5, 0};
-        Vector3d wt_RF {0, 0, 0.5};
-        Vector3d wf_LF {0.5, 0.5, 0};
-        Vector3d wt_LF {0, 0, 0.5};
+        Vector3d wf_RF {0.9, 0.9, 0.9};
+        Vector3d wt_RF {0, 0, 0};
+        Vector3d wf_LF {0.9, 0.9, 0.9};
+        Vector3d wt_LF {0, 0, 0};
 
         Matrix3d KFP_RF, KFP_LF;
         Matrix3d KFD_RF, KFD_LF;
@@ -164,17 +164,14 @@ public:
     Stabilizer(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots, unsigned int robotIndex);
 
     /**
-     * @brief Computes the LQR gain matrix (usually denoted K) for a discrete time
-     * infinite horizon problem.
-     *
+     * @brief Computes the LQR gain matrix (usually denoted K)
      * @param A State matrix of the underlying system
      * @param B Input matrix of the underlying system
      * @param Q Weight matrix penalizing the state
      * @param R Weight matrix penalizing the controls
      * @param N Weight matrix penalizing state / control pairs
-     * @return K, the Generated Gain matrix (has to be a double/dynamic size
-     * matrix!). 
-     * @param eps Number of Iterations to compute K
+     * @return K, the Generated Gain matrix (has to be a double/dynamic size matrix!)
+     * @param eps Constant between iterations that determines when convergence is reached
      */
 
     MatrixXd lqrGain(MatrixXd A, MatrixXd B, MatrixXd Q, MatrixXd R,
@@ -210,7 +207,7 @@ public:
     // Get the current feedback: the state needed for the stabilizer, and the variables needed to transform the
     // accelerations of the contacts from the base frame to the world frame
 
-    feedback getFeedback(mc_rbdyn::Robots &realRobots);
+    feedback getFeedback(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots);
 
     // This function computes the LQR gain from the linearized Matrices
 

@@ -245,36 +245,36 @@ return x_ref;
 
 }
 
-Stabilizer::feedback Stabilizer::getFeedback(mc_rbdyn::Robots &realRobots){
+Stabilizer::feedback Stabilizer::getFeedback(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots){
 
 feedback feedback;
 
 feedback.R = realRobots.robot().posW().rotation().transpose();
 
-feedback.pc_1 = realRobots.robot().bodyPosW("R_ANKLE_P_S").translation();
-feedback.Rc_1 = realRobots.robot().bodyPosW("R_ANKLE_P_S").rotation().transpose();
-feedback.pc_d_1 = realRobots.robot().bodyVelW("R_ANKLE_P_S").linear();
-feedback.oc_d_1 = realRobots.robot().bodyVelW("R_ANKLE_P_S").angular();
+feedback.pc_1 = robots.robot().bodyPosW("R_ANKLE_P_S").translation();
+feedback.Rc_1 = robots.robot().bodyPosW("R_ANKLE_P_S").rotation().transpose();
+feedback.pc_d_1 = robots.robot().bodyVelW("R_ANKLE_P_S").linear();
+feedback.oc_d_1 = robots.robot().bodyVelW("R_ANKLE_P_S").angular();
 
-feedback.pc_2 = realRobots.robot().bodyPosW("L_ANKLE_P_S").translation();
-feedback.Rc_2 = realRobots.robot().bodyPosW("L_ANKLE_P_S").rotation().transpose();
-feedback.pc_d_2 = realRobots.robot().bodyVelW("L_ANKLE_P_S").linear();
-feedback.oc_d_2 = realRobots.robot().bodyVelW("L_ANKLE_P_S").angular();
+feedback.pc_2 = robots.robot().bodyPosW("L_ANKLE_P_S").translation();
+feedback.Rc_2 = robots.robot().bodyPosW("L_ANKLE_P_S").rotation().transpose();
+feedback.pc_d_2 = robots.robot().bodyVelW("L_ANKLE_P_S").linear();
+feedback.oc_d_2 = robots.robot().bodyVelW("L_ANKLE_P_S").angular();
 
 feedback.x.CoM.pos = realRobots.robot().com();
 feedback.x.CoM.R = realRobots.robot().posW().rotation().transpose();
 feedback.x.CoM.vel = realRobots.robot().comVelocity();    
 feedback.x.CoM.angvel = realRobots.robot().bodyVelW("base_link").angular();
 
-feedback.x.rightFoot.pos = realRobots.robot().X_b1_b2("base_link","R_ANKLE_P_S").translation();
-feedback.x.rightFoot.R = realRobots.robot().X_b1_b2("base_link","R_ANKLE_P_S").rotation().transpose();
+feedback.x.rightFoot.pos = robots.robot().X_b1_b2("base_link","R_ANKLE_P_S").translation();
+feedback.x.rightFoot.R = robots.robot().X_b1_b2("base_link","R_ANKLE_P_S").rotation().transpose();
 feedback.x.rightFoot.vel = feedback.R.transpose() * (feedback.pc_d_1 - feedback.x.CoM.vel - S(feedback.x.CoM.angvel) * (feedback.pc_1 - feedback.x.CoM.pos));
 feedback.x.rightFoot.angvel = feedback.R.transpose() * (feedback.oc_d_1 - feedback.x.CoM.angvel);
 feedback.x.rightFoot.fc = feedback.Rc_1 * realRobots.robot().bodyWrench("R_ANKLE_P_S").force();
 feedback.x.rightFoot.tc = feedback.Rc_1 * realRobots.robot().bodyWrench("R_ANKLE_P_S").moment();
 
-feedback.x.leftFoot.pos = realRobots.robot().X_b1_b2("base_link","L_ANKLE_P_S").translation();
-feedback.x.leftFoot.R = realRobots.robot().X_b1_b2("base_link","L_ANKLE_P_S").rotation().transpose();
+feedback.x.leftFoot.pos = robots.robot().X_b1_b2("base_link","L_ANKLE_P_S").translation();
+feedback.x.leftFoot.R = robots.robot().X_b1_b2("base_link","L_ANKLE_P_S").rotation().transpose();
 feedback.x.leftFoot.vel = feedback.R.transpose() * (feedback.pc_d_2 - feedback.x.CoM.vel - S(feedback.x.CoM.angvel) * (feedback.pc_2 - feedback.x.CoM.pos));
 feedback.x.leftFoot.angvel = feedback.R.transpose() * (feedback.oc_d_2 - feedback.x.CoM.angvel);
 feedback.x.leftFoot.fc = feedback.Rc_2 * realRobots.robot().bodyWrench("L_ANKLE_P_S").force();

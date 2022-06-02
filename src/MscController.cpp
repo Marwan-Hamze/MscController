@@ -5,8 +5,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 {
   config_.load(config);
   
-  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), 0, 0, 10);
-  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 10);
+  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 10);
+  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 1, 10);
 
   rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 1, 250);
   rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 1, 250);
@@ -102,6 +102,12 @@ bool MscController::run()
     gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The Force Error", [this]() {
       
       mc_rtc::log::info("Force Error = \n{}\n" , stab_->f_delta_);
+
+      }));
+
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The LQR Gain", [this]() {
+      
+      mc_rtc::log::info("LQR Gain K = \n{}\n" , stab_->K_);
 
       }));
 
@@ -257,7 +263,7 @@ bool MscController::run()
   }
 
   if (init) {
-    stab_->feedback_ = stab_->getFeedback(realRobots());
+    stab_->feedback_ = stab_->getFeedback(robots(), realRobots());
     stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->config_);
     stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, realRobots());
 
@@ -289,6 +295,8 @@ bool MscController::run()
     fLF_ = stab_->f_delta_.block(6,0,3,1);
     tLF_ = stab_->f_delta_.block(9,0,3,1);
 
+
+
 /*     mc_rtc::log::info("Force Right Hand: \n{}\n", realRobots().robot().bodyWrench("R_WRIST_Y_S").force());
     mc_rtc::log::info("Moment Right Hand: \n{}\n", realRobots().robot().bodyWrench("R_WRIST_Y_S").moment());
     mc_rtc::log::info("Force Left Hand: \n{}\n", realRobots().robot().bodyWrench("L_WRIST_Y_S").force());
@@ -300,6 +308,7 @@ bool MscController::run()
 
     /* mc_rtc::log::info("From Ankle: \n{}\n", realRobots().robot().bodyWrench("L_ANKLE_P_S").moment());
     mc_rtc::log::info("From Surface: \n{}\n", realRobots().robot().surfaceWrench("LeftFoot").moment()); */
+
   }
 
   return mc_control::fsm::Controller::run();
@@ -328,7 +337,7 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   if (!init) {
     gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Initialize", [this]() {
 
-      stab_->config_ = stab_->configure(realRobots());
+      stab_->config_ = stab_->configure(robots());
       stab_->x_ref_ = stab_->reference(realRobots());
       stab_->linearMatrix_ = stab_->computeMatrix(stab_->x_ref_, stab_->config_);
       stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_); 
