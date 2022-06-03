@@ -21,12 +21,14 @@ struct MscController_DLLAPI MscController : public mc_control::fsm::Controller
     void reset(const mc_control::ControllerResetData & reset_data) override;
 
 private:
+
     mc_rtc::Configuration config_;
+
     bool stabilizer = false;
     bool flip = false;
     bool init = false;
     bool main = false;
-    
+
     Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
 
     std::shared_ptr<msc_stabilizer::Stabilizer> stab_;

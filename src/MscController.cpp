@@ -6,7 +6,7 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   config_.load(config);
   
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 10);
-  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 1, 10);
+  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 10);
 
   rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 1, 250);
   rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 1, 250);
@@ -296,7 +296,6 @@ bool MscController::run()
     tLF_ = stab_->f_delta_.block(9,0,3,1);
 
 
-
 /*     mc_rtc::log::info("Force Right Hand: \n{}\n", realRobots().robot().bodyWrench("R_WRIST_Y_S").force());
     mc_rtc::log::info("Moment Right Hand: \n{}\n", realRobots().robot().bodyWrench("R_WRIST_Y_S").moment());
     mc_rtc::log::info("Force Left Hand: \n{}\n", realRobots().robot().bodyWrench("L_WRIST_Y_S").force());
@@ -345,6 +344,11 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
       mc_rtc::log::info("Configuration Initialized\n");
       mc_rtc::log::info("Reference obtained from the Robot\n");
       mc_rtc::log::info("LQR Gain Calculated\n");
+
+      removeContact({robot().name(), "ground", "RightFoot", "AllGround"});
+      removeContact({robot().name(), "ground", "LeftFoot", "AllGround"});
+
+      mc_rtc::log::info("Feet Contacts are now free to move\n");
 
       init = true;
 

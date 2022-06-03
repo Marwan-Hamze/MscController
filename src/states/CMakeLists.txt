@@ -1,3 +1,4 @@
 add_fsm_state_simple(MscController_Initial)
+add_fsm_state_simple(RemoveHand)
 
 add_fsm_data_directory(data)

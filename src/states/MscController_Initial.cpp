@@ -25,6 +25,7 @@ bool MscController_Initial::run(mc_control::fsm::Controller & ctl_)
 void MscController_Initial::teardown(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<MscController &>(ctl_);
+  ctl_.gui()->removeElement({"Stabilizer","FSM"},"Move Right Hand");
 }
 
 EXPORT_SINGLE_STATE("MscController_Initial", MscController_Initial)
