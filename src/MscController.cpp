@@ -5,6 +5,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 {
   config_.load(config);
   
+  solver().addConstraintSet(dynamicsConstraint);
+
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 10);
   baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 10);
 
@@ -16,7 +18,10 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex()));
 
-  mc_rtc::log::success("MscController init done ");
+  mc_rtc::log::success("MscController initialization from Constructor done ");
+
+  dof << 0,0,0,0,0,0;
+  //dof << 0,0,1,1,1,0;
 
   com_ = com_.Zero();
   theta_ = theta_.Zero();
@@ -69,7 +74,28 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 bool MscController::run()
 {
 
-    if (init && !main) {
+    if(init && !compute) {
+
+      gui()->removeElement({"Stabilizer","Initialization"}, "Initialize");
+      gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Compute", [this]() {
+      
+      stab_->config_ = stab_->configure(robots());
+      stab_->x_ref_ = stab_->reference(realRobots());
+      stab_->linearMatrix_ = stab_->computeMatrix(stab_->x_ref_, stab_->config_);
+      stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_); 
+
+      mc_rtc::log::info("Configuration Initialized\n");
+      mc_rtc::log::info("Reference obtained from the Robot\n");
+      mc_rtc::log::info("LQR Gain Calculated\n");
+
+      ref = true;
+      }));
+
+    compute = true;
+
+    }
+
+    if (ref && !main) {
 
     gui()->removeCategory({"Stabilizer","Initialization"});
     gui()->removeCategory({"Stabilizer","FSM"});
@@ -114,7 +140,7 @@ bool MscController::run()
     main = true;
   }
 
-  if(!stabilizer && !flip && init) {
+  if(!stabilizer && !flip && ref) {
     
   gui()->removeElement({"Stabilizer","Main"}, "Disable");
   gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Enable", [this]() {
@@ -236,7 +262,7 @@ bool MscController::run()
   flip = true;
    }
 
-  else if (stabilizer && flip && init) {
+  else if (stabilizer && flip && ref) {
 
   gui()->removeElement({"Stabilizer","Main"}, "Enable");
   gui()->removeCategory({"Stabilizer","Tuning Q"});
@@ -262,7 +288,7 @@ bool MscController::run()
   flip = false;
   }
 
-  if (init) {
+  if (ref) {
     stab_->feedback_ = stab_->getFeedback(robots(), realRobots());
     stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->config_);
     stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, realRobots());
@@ -336,17 +362,14 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   if (!init) {
     gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Initialize", [this]() {
 
-      stab_->config_ = stab_->configure(robots());
-      stab_->x_ref_ = stab_->reference(realRobots());
-      stab_->linearMatrix_ = stab_->computeMatrix(stab_->x_ref_, stab_->config_);
-      stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_); 
-
-      mc_rtc::log::info("Configuration Initialized\n");
-      mc_rtc::log::info("Reference obtained from the Robot\n");
-      mc_rtc::log::info("LQR Gain Calculated\n");
+      solver().removeConstraintSet(dynamicsConstraint);
+      solver().addConstraintSet(kinematicsConstraint);
 
       removeContact({robot().name(), "ground", "RightFoot", "AllGround"});
       removeContact({robot().name(), "ground", "LeftFoot", "AllGround"});
+
+      addContact({robot().name(), "ground", "RightFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof});
+      addContact({robot().name(), "ground", "LeftFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof});
 
       mc_rtc::log::info("Feet Contacts are now free to move\n");
 
