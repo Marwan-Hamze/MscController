@@ -119,17 +119,17 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {10000, 10000, 10000};
+        Vector3d qcom_p {300000, 300000, 300000};
         Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {10000, 10000, 10000};
+        Vector3d qcom_vel {1000000, 10000000, 1000000};
         Vector3d qcom_angvel {1, 1, 1};
 
-        Vector3d qRF_p {3000000, 3000000, 3000000};
+        Vector3d qRF_p {1000000000, 1000000000, 1000000000};
         Vector3d qRF_R {1, 1, 1};
         Vector3d qRF_vel {3000000, 3000000, 3000000};
         Vector3d qRF_angvel {1, 1, 1};
 
-        Vector3d qLF_p {3000000, 3000000, 3000000};
+        Vector3d qLF_p {1000000000, 1000000000, 1000000000};
         Vector3d qLF_R {1, 1, 1};
         Vector3d qLF_vel {3000000, 3000000, 3000000};
         Vector3d qLF_angvel {1, 1, 1};
@@ -139,10 +139,10 @@ protected:
         Vector3d rLF_lacc {1, 1, 1};
         Vector3d rLF_aacc {1, 1, 1};
 
-        Vector3d wf_RF {0.9, 0.9, 0.9};
-        Vector3d wt_RF {0.5, 0.5, 0.5};
-        Vector3d wf_LF {0.9, 0.9, 0.9};
-        Vector3d wt_LF {0.5, 0.5, 0.5};
+        Vector3d wf_RF {0.95, 0.95, 0.95};
+        Vector3d wt_RF {0.95, 0.95, 0.95};
+        Vector3d wf_LF {0.95, 0.95, 0.95};
+        Vector3d wt_LF {0.95, 0.95, 0.95};
 
         Matrix3d KFP_RF, KFP_LF;
         Matrix3d KFD_RF, KFD_LF;

@@ -10,11 +10,11 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 10);
   baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 10);
 
-  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 0, 250);
-  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_P_S", robots(), robots().robot().robotIndex(), 0, 250);
+  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
+  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
 
-  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_P_S", robots(), robots().robot().robotIndex(), 0, 250);
-  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_P_S", robots(), robots().robot().robotIndex(), 0, 250);
+  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
+  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
 
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex()));
 
@@ -331,7 +331,7 @@ bool MscController::run()
     //mc_rtc::log::info("Transformation Surface-Ankle Left - Translation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().translation());
     //mc_rtc::log::info("Transformation Surface-Ankle Right - Translation: \n{}\n", realRobots().robot().surface("RightFoot").X_b_s().translation());
 
-    /* mc_rtc::log::info("From Ankle: \n{}\n", realRobots().robot().bodyWrench("L_ANKLE_P_S").moment());
+    /* mc_rtc::log::info("From Ankle: \n{}\n", realRobots().robot().bodyWrench("L_ANKLE_R").moment());
     mc_rtc::log::info("From Surface: \n{}\n", realRobots().robot().surfaceWrench("LeftFoot").moment()); */
 
   }
