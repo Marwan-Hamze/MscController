@@ -322,10 +322,7 @@ bool MscController::run()
     tLF_ = stab_->f_delta_.block(9,0,3,1);
 
 
-/*     mc_rtc::log::info("Force Right Hand: \n{}\n", realRobots().robot().bodyWrench("R_WRIST_Y_S").force());
-    mc_rtc::log::info("Moment Right Hand: \n{}\n", realRobots().robot().bodyWrench("R_WRIST_Y_S").moment());
-    mc_rtc::log::info("Force Left Hand: \n{}\n", realRobots().robot().bodyWrench("L_WRIST_Y_S").force());
-    mc_rtc::log::info("Moment Left Hand: \n{}\n", realRobots().robot().bodyWrench("L_WRIST_Y_S").moment()); */
+   //mc_rtc::log::info("Force Right Hand: \n{}\n", realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(robots().robot()).force());
 
     //mc_rtc::log::info("Transformation Surface-Ankle Rotation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().rotation().transpose());
     //mc_rtc::log::info("Transformation Surface-Ankle Left - Translation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().translation());

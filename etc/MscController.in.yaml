@@ -20,11 +20,11 @@ VerboseStateFactory: false
 robots:
   ground:
     module: env/ground
-  wall:
+  tilted_board:
     module: env/ground
     init_pos:
-      translation: [0.50, 0.0, 0.0]
-      rotation: [0.0, -1.57, 0.0]
+      translation: [7.4, 0.0, 7.8]
+      rotation: [0.0, -0.80, 0.0]
 # General constraints, always on
 constraints:
 - type: contact
@@ -35,15 +35,15 @@ constraints:
 collisions:
 - type: collision
   useMinimal: true
-- type: collision
-  r1: hrp4
-  r2: wall
-  collisions:
-    - body1: L_WRIST_Y_LINK
-      body2: ground
-      iDist: 0.5
-      sDist: 0.02
-      damping: 0.0
+#- type: collision
+#  r1: hrp4
+#  r2: tilted_board
+#  collisions:
+#    - body1: L_WRIST_Y_LINK
+#      body2: ground
+#      iDist: 0.5
+#      sDist: 0.02
+#      damping: 0.0
 # Initial set of contacts
 contacts:
 - r1: hrp4
@@ -81,7 +81,7 @@ states:
         stiffness: 5
       KeepChest:
         type: orientation
-        body: WAIST_R_S
+        body: R_HIP_P_LINK
         weight: 100
         stiffness: 1
   
@@ -92,19 +92,28 @@ states:
       RightHandTrajectory:
         type: bspline_trajectory
         setupMode: false
-        surface: RightGripper
+        surface: RightHand
         weight: 1000
         stiffness: 50
-        duration: 4
+        duration: 6
         dimWeight: [1,1,1, 1, 0.5, 0.5]
         displaySamples: 100
         target:
-          translation: [0.45, -0.4, 1.1]
-          rotation: [1.57, 0, 1.57]
-        controlPoints: [[0.17, -0.5, 0.85]]
-        # oriWaypoints: [[3.5, [-1.57,  0, 1.57]]]
+          translation: [0.4, -0.35, 0.95]
+          rotation: [-0.908, 0.0, 1.57]
+        controlPoints: [[0.0, -0.5, 0.85]]
+        oriWaypoints: [3.5, [-0.785, 0.0, 1.57]]
         completion:
           timeElapsed: true
+  
+  RightHand::Contact:
+    base: StandingBase
+    AddContacts:
+      - r1: hrp4
+        r2: tilted_board
+        r1Surface: RightHand
+        r2Surface: AllGround
+        dof: [0, 0, 0, 0, 0, 0]
 
   # Increase applied force until we reach 20N
   RightHandPushAdmittance:
@@ -112,7 +121,7 @@ states:
     tasks:
       RightHandAdmittance:
         type: admittance
-        surface: RightGripper
+        surface: RightHand
         stiffness: [10, 10, 10, 10, 10, 1]
         damping: [6.3, 6.3, 6.3, 6.3, 6.3, 300]
         admittance: [0,0,0,0,0,0.001]
@@ -125,7 +134,7 @@ states:
         targetRotation: [1.57, 0, 1.57]
         completion:
           wrench:
-            force: [.nan, .nan, -30]
+            force: [.nan, .nan, -20]
             couple: [.nan, .nan, .nan]
 
   # Keep the Right Hand and wait for the GUI to remove it
@@ -157,7 +166,7 @@ states:
         weight: 1000
         stiffness: 5
         duration: 6
-        surface: RightGripper
+        surface: RightHand
         moveWorld:
           translation: [-0.1, 0, 0]
           rotation: [0,0,0]
@@ -165,7 +174,7 @@ states:
           timeElapsed: true
     AddCollisionsAfter:
       - r1: hrp4
-        r2: wall
+        r2: tilted_board
         collisions:
           - body1: R_WRIST_Y_LINK
             body2: ground
@@ -187,9 +196,9 @@ states:
 # Transitions map
 transitions:
 - [MscController_Initial,      OK, RightHandToWall, Auto]
-- [RightHandToWall,            OK, RightHandPushAdmittance, Auto]
-- [RightHandPushAdmittance,    OK, KeepRightHand, Auto]
-- [KeepRightHand,              OK, RightHandReleaseAdmittance, Auto]
+- [RightHandToWall,            OK, RemoveHand, Auto]
+#- [RightHand::Contact,         OK, RemoveHand, Auto]
+- [RemoveHand,                 OK, RightHandReleaseAdmittance, Auto]
 - [RightHandReleaseAdmittance, OK, RightHandMoveBack, Auto]
 - [RightHandMoveBack,          OK, StandingHalfSitting, Auto]
 
