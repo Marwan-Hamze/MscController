@@ -20,6 +20,10 @@ struct MscController_DLLAPI MscController : public mc_control::fsm::Controller
 
     void reset(const mc_control::ControllerResetData & reset_data) override;
 
+protected:
+  
+  double t_ = 0; ///< Elapsed time since the controller started
+
 private:
 
     mc_rtc::Configuration config_;
@@ -31,7 +35,7 @@ private:
     bool ref = false;
     bool compute = false;
     
-    Eigen::Vector6d dof;
+    Eigen::Vector6d dof, dof_full;
 
     Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
 

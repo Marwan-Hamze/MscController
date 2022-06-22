@@ -1,3 +1,5 @@
-This project implements a stabilizer in c++ that aims to maintain the balance of a humanoid robot making non rigid contacts with the environment, relying on a model of the environment, and using a trade-off between state and force feedback. The stabilizer is implemented in a simple controller.
+This project implements a controller in c++ that aims to maintain the balance of a humanoid robot making non rigid contacts with the environment. Relying on a linearized model of a proposed non-linear model of the environment, and using a trade-off between state and force feedback, an LQR gain is generated, which is used to send acceleration signals to the contact points. This control loop is what I define as a Multi-Soft-Contacts Stabilizer (in short, Msc Stabilizer). The accelerations are sent as tasks to a QP solver that generates the joint positions for the robot. 
 
-The work is in progress.
+The controller is written using the [mc_rtc](https://jrl-umi3218.github.io/mc_rtc/index.html) framework.
+
+The main branch is best suitable for multi-contacts (not yet, working on it!), while the 2_contacts branch is suitable for 2 contacts made by the robot's feet.

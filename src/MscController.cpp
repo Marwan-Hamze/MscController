@@ -20,8 +20,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   mc_rtc::log::success("MscController initialization from Constructor done ");
 
-  dof << 0,0,0,0,0,0;
-  //dof << 0,0,1,1,1,0;
+  dof << 0, 0, 0, 0, 0, 0;
+  dof_full << 1, 1, 1, 1, 1, 1;
 
   com_ = com_.Zero();
   theta_ = theta_.Zero();
@@ -98,7 +98,6 @@ bool MscController::run()
     if (ref && !main) {
 
     gui()->removeCategory({"Stabilizer","Initialization"});
-    gui()->removeCategory({"Stabilizer","FSM"});
 
     gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check Accelerations", [this]() {
       
@@ -159,6 +158,31 @@ bool MscController::run()
 
     mc_rtc::log::success("Msc Stabilizer Enabled");
     }));
+    
+
+  gui()->addElement({"Stabilizer", "Stop"}, mc_rtc::gui::Button("Stop", [this](){
+
+    ref = false;
+
+    gui()->removeCategory({"Stabilizer","Main"});
+    gui()->removeCategory({"Stabilizer","Tuning Q"});
+    gui()->removeCategory({"Stabilizer","Tuning R"});
+    gui()->removeCategory({"Stabilizer","Tuning W"});
+
+    removeContact({robot().name(), "ground", "RightFoot", "AllGround"});
+    removeContact({robot().name(), "ground", "LeftFoot", "AllGround"});
+
+    addContact({robot().name(), "ground", "RightFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof_full});
+    addContact({robot().name(), "ground", "LeftFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof_full});
+
+    solver().removeConstraintSet(kinematicsConstraint);
+    solver().addConstraintSet(dynamicsConstraint);
+
+    mc_rtc::log::info("Now the Right Hand can be moved back\n");
+
+    gui()->removeCategory({"Stabilizer","Stop"});
+
+  }));
 
   // Confirue Q GUI
 
@@ -268,6 +292,8 @@ bool MscController::run()
   gui()->removeCategory({"Stabilizer","Tuning Q"});
   gui()->removeCategory({"Stabilizer","Tuning R"});
   gui()->removeCategory({"Stabilizer","Tuning W"});
+  gui()->removeCategory({"Stabilizer","Stop"});
+
 
   gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Disable", [this]() {
     
@@ -333,6 +359,8 @@ bool MscController::run()
 
   }
 
+   t_ += timeStep;
+
   return mc_control::fsm::Controller::run();
 }
 
@@ -374,5 +402,16 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
 
    }));
   }
+
+  using Color = mc_rtc::gui::Color;
+  gui()->addPlot(
+      "Right Foot CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 240}}, [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "CoP(x)", [this]() { return realRobots().robot().cop("RightFoot").x(); }, Color::Blue));
+
+  gui()->addPlot(
+      "Robot's CoM(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 240}}, [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "CoM(x)", [this]() { return realRobots().robot().com().x(); }, Color::Red));
 
 }

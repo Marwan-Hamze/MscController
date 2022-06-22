@@ -81,8 +81,8 @@ states:
         stiffness: 5
       KeepChest:
         type: orientation
-        body: R_HIP_P_LINK
-        weight: 100
+        body: torso
+        weight: 1000
         stiffness: 1
   
   # Trajectory to bring hand close to the wall
@@ -95,16 +95,38 @@ states:
         surface: RightHand
         weight: 1000
         stiffness: 50
-        duration: 6
-        dimWeight: [1,1,1, 1, 0.5, 0.5]
+        duration: 4.0
+        dimWeight: [1, 1, 1, 1, 0.5, 0.5]
         displaySamples: 100
         target:
-          translation: [0.4, -0.35, 0.95]
+          translation: [0.3, -0.35, 0.95]
           rotation: [-0.908, 0.0, 1.57]
         controlPoints: [[0.0, -0.5, 0.85]]
         oriWaypoints: [3.5, [-0.785, 0.0, 1.57]]
         completion:
           timeElapsed: true
+
+  RightHand::ContactWithConstantVel:
+    base: MetaTasks
+    # Only allow motion along hand's z axis
+    AddContacts:
+      - r1: hrp4
+        r2: tilted_board  
+        r1Surface: RightHand
+        r2Surface: AllGround
+        dof: [0, 0, 1, 1, 1, 0]
+    tasks:
+      RightHandContactConstantVelocity:
+        type: surfaceTransform
+        surface: RightHand
+        refVel: [0,0,0,0,0,-0.05]
+        stiffness: 1
+        damping: 300
+        weight: 800
+        completion:
+          wrench:
+            couple: [0, 0, 0]
+            force: [0, 0, 10]
   
   RightHand::Contact:
     base: StandingBase
@@ -115,72 +137,36 @@ states:
         r2Surface: AllGround
         dof: [0, 0, 0, 0, 0, 0]
 
-  # Increase applied force until we reach 20N
-  RightHandPushAdmittance:
-    base: StandingBase
-    tasks:
-      RightHandAdmittance:
-        type: admittance
-        surface: RightHand
-        stiffness: [10, 10, 10, 10, 10, 1]
-        damping: [6.3, 6.3, 6.3, 6.3, 6.3, 300]
-        admittance: [0,0,0,0,0,0.001]
-        maxVel:
-          linear: [0.2, 0.2, 0.5]
-          angular: [0.2, 0.2, 0.2]
-        wrench:
-         force: [0, 0, -20]
-         couple: [0, 0, 0]
-        targetRotation: [1.57, 0, 1.57]
-        completion:
-          wrench:
-            force: [.nan, .nan, -20]
-            couple: [.nan, .nan, .nan]
-
-  # Keep the Right Hand and wait for the GUI to remove it
-  KeepRightHand:
-    base: Parallel
-    states: [RightHandPushAdmittance, RemoveHand]
-
-  # Decrease applied force until we reach near zero force
-  RightHandReleaseAdmittance:
-    base: RightHandPushAdmittance
-    tasks:
-      RightHandAdmittance:
-        wrench:
-         force: [0, 0, -1]
-         couple: [0, 0, 0]
-        completion:
-          wrench:
-            force: [.nan, .nan, -1]
-            couple: [.nan, .nan, .nan]
-
-  # Move hand 10cm back
-  # Add collision avoidance between right hand and the wall.
-  # Note that the wall position was updated using UpdateWallFromKinematics and thus corresponds to the actual wall position
   RightHandMoveBack:
-    base: StandingBase
-    tasks:
-      RightHandMoveBack:
-        type: surfaceTransform
-        weight: 1000
-        stiffness: 5
-        duration: 6
-        surface: RightHand
-        moveWorld:
-          translation: [-0.1, 0, 0]
-          rotation: [0,0,0]
-        completion:
-          timeElapsed: true
-    AddCollisionsAfter:
+    base: MetaTasks
+    RemoveContacts:
       - r1: hrp4
         r2: tilted_board
-        collisions:
-          - body1: R_WRIST_Y_LINK
-            body2: ground
-            iDist: 0.15
-            sDist: 0.05
-            damping: 0.0
+        r1Surface: RightHand
+        r2Surface: AllGround
+    tasks:
+      MoveRightHand:
+       type: surfaceTransform
+       surface: RightHand
+       refVel: [0,0,0,0,0, 0.02]
+       stiffness: 3.0
+       damping: 50
+       weight: 500
+       moveWorld:
+         translation: [-0.3, -0.1, -0.1]
+       completion:
+         OR:
+           - eval: 0.05
+           - AND:
+               - timeout: 3.0
+               - speed: 0.01
+  RightHand::Remove:
+    base: Parallel
+    states: [StandingBase, RightHandMoveBack]
+    configs:
+      StandingBase:
+        stiffness: 10
+
 
   # Go back to halfsitting
   StandingHalfSitting:
@@ -195,12 +181,12 @@ states:
 
 # Transitions map
 transitions:
-- [MscController_Initial,      OK, RightHandToWall, Auto]
-- [RightHandToWall,            OK, RemoveHand, Auto]
-#- [RightHand::Contact,         OK, RemoveHand, Auto]
-- [RemoveHand,                 OK, RightHandReleaseAdmittance, Auto]
-- [RightHandReleaseAdmittance, OK, RightHandMoveBack, Auto]
-- [RightHandMoveBack,          OK, StandingHalfSitting, Auto]
+- [MscController_Initial,                        OK, RightHandToWall, Auto]
+- [RightHandToWall,                              OK, RightHand::ContactWithConstantVel, Auto]
+- [RightHand::ContactWithConstantVel,            OK, RightHand::Contact, Auto]
+- [RightHand::Contact,                           OK, RemoveHand, Auto]
+- [RemoveHand,                                   OK, RightHand::Remove, Auto]
+- [RightHand::Remove,                            OK, StandingHalfSitting, Auto]
 
 # Initial state
 init: MscController_Initial
