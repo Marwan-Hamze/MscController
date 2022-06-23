@@ -17,13 +17,13 @@ struct Stabilizer {
 
 protected:
 
-    // Defining a 36-element vector, to group the state error and force error
+    // Defining a 48-element vector, to group the state error and force error
 
-    typedef Matrix <double,36,1> error;
+    typedef Matrix <double,48,1> error;
 
-    // Defining a 12-element command vector
+    // Defining a 18-element command vector
 
-    typedef Matrix <double,12,1> command;
+    typedef Matrix <double,18,1> command;
 
     // Struct to group the com variables
 
@@ -57,6 +57,7 @@ protected:
 
     contact rightFoot;
     contact leftFoot;
+    contact rightHand;
 
     };
 
