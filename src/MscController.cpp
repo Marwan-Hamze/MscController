@@ -69,6 +69,9 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
   logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
 
+  logger().addLogEntry("RightHand_Force", [this]() {return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force();});
+  logger().addLogEntry("RightHand_Moment", [this]() {return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).moment();});
+
 }
 
 bool MscController::run()
@@ -413,5 +416,11 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
       "Robot's CoM(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 240}}, [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoM(x)", [this]() { return realRobots().robot().com().x(); }, Color::Red));
+
+  gui()->addPlot(
+      "Right Hand Force(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 240}}, [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "f_RH(z)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red));
+
 
 }
