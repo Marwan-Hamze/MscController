@@ -66,8 +66,8 @@ protected:
     struct feedback{
 
     state x;
-    Matrix3d R, Rc_1, Rc_2;
-    Vector3d pc_1 , pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2;
+    Matrix3d R, Rc_1, Rc_2, Rc_3;
+    Vector3d pc_1 , pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2, pc_3, pc_d_3, oc_d_3;
 
     };
 
@@ -83,6 +83,9 @@ protected:
     Vector3d LF_linAcc;
     Vector3d LF_angAcc;
 
+    Vector3d RH_linAcc;
+    Vector3d RH_angAcc;
+
     Vector3d ddcom;
     Vector3d dwb;
 
@@ -92,10 +95,10 @@ protected:
 
     struct linearMatrix{
 
-    Matrix<double, 36, 36> A;
-    Matrix<double, 36, 12> B;
+    Matrix<double, 48, 48> A;
+    Matrix<double, 48, 18> B;
 
-    Matrix<double, 36, 36> M;
+    Matrix<double, 48, 48> M;
 
     };
 
@@ -106,7 +109,7 @@ protected:
         Vector3d ez {0, 0, 1};
 
         Matrix3d Id;
-        Matrix<double, 36, 36> Id36;
+        Matrix<double, 48, 48> Id48;
         Matrix3d Zero3_3;
         Matrix<double, 12, 6> Zero12_6;
         Matrix<double, 12, 12> Zero12_12;
@@ -114,11 +117,11 @@ protected:
         double m;
         Matrix3d I;
 
-        Matrix<double, 36, 36> Q;
-        Matrix<double, 12, 12> R;
-        Matrix<double, 36, 36> W;
+        Matrix<double, 48, 48> Q;
+        Matrix<double, 18, 18> R;
+        Matrix<double, 48, 48> W;
 
-        Matrix<double, 36, 12> N_xu;
+        Matrix<double, 48, 18> N_xu;
 
         Vector3d qcom_p {3000000000, 3000000000, 3000000000};
         Vector3d qcom_R {1, 1, 1};
@@ -135,22 +138,31 @@ protected:
         Vector3d qLF_vel {3000000, 3000000, 3000000};
         Vector3d qLF_angvel {1, 1, 1};
 
+        Vector3d qRH_p {3000000000, 3000000000, 3000000000};
+        Vector3d qRH_R {1, 1, 1};
+        Vector3d qRH_vel {3000000, 3000000, 3000000};
+        Vector3d qRH_angvel {1, 1, 1};
+
         Vector3d rRF_lacc {1, 1, 1};
         Vector3d rRF_aacc {1, 1, 1};
         Vector3d rLF_lacc {1, 1, 1};
         Vector3d rLF_aacc {1, 1, 1};
+        Vector3d rRH_lacc {1, 1, 1};
+        Vector3d rRH_aacc {1, 1, 1};
 
         Vector3d wf_RF {0.95, 0.95, 0.95};
         Vector3d wt_RF {0.95, 0.95, 0.95};
         Vector3d wf_LF {0.95, 0.95, 0.95};
         Vector3d wt_LF {0.95, 0.95, 0.95};
+        Vector3d wf_RH {0.95, 0.95, 0.95};
+        Vector3d wt_RH {0.95, 0.95, 0.95};
 
-        Matrix3d KFP_RF, KFP_LF;
-        Matrix3d KFD_RF, KFD_LF;
-        Matrix3d KTP_RF, KTP_LF;
-        Matrix3d KTD_RF, KTD_LF;
+        Matrix3d KFP_RF, KFP_LF, KFP_RH;
+        Matrix3d KFD_RF, KFD_LF, KFD_RH;
+        Matrix3d KTP_RF, KTP_LF, KTP_RH;
+        Matrix3d KTD_RF, KTD_LF, KTD_RH;
 
-        Matrix3d Rsc_RF, Rsc_LF;
+        Matrix3d Rsc_RF, Rsc_LF, Rsc_RH;
 
         Matrix3d Kp, Kd;
 
@@ -236,7 +248,7 @@ public:
 
     configuration config_;
 
-    Matrix<double, 12, 1> f_delta_;
+    Matrix<double, 18, 1> f_delta_;
     error x_delta_;
     error z_delta_;
 
@@ -250,24 +262,27 @@ private:
 
     // Definition of the Modified Linear Matrices after the trade-off between the state and force errors
 
-    Matrix<double, 36, 36> Ay;
-    Matrix<double, 36, 12> By;
-    Matrix<double, 36, 36> Qy;
+    Matrix<double, 48, 48> Ay;
+    Matrix<double, 48, 18> By;
+    Matrix<double, 48, 48> Qy;
 
-    Matrix<double, 36, 36> N;
+    Matrix<double, 48, 48> N;
 
     // Definition of sub-Matrices to simplify the expression of the Control Matrices 
 
     Matrix3d A31, A32, A33, A34, A41, A42, A43, A44;
     Matrix3d F1_31, F1_33, F1_41, F1_42, F1_43, F1_44;
     Matrix3d F2_31, F2_33, F2_41, F2_42, F2_43, F2_44;
+    Matrix3d F3_31, F3_33, F3_41, F3_42, F3_43, F3_44;
     Matrix3d T1_11, T1_12, T1_13, T1_14, T1_22, T1_24;
     Matrix3d T2_11, T2_12, T2_13, T2_14, T2_22, T2_24;
+    Matrix3d T3_11, T3_12, T3_13, T3_14, T3_22, T3_24;
     Matrix3d V1_11, V1_13, V1_22, V1_24;
     Matrix3d V2_11, V2_13, V2_22, V2_24;
+    Matrix3d V3_11, V3_13, V3_22, V3_24;
 
-    Matrix<double, 12, 12> F0, F1, F2, D1, D2, T1, T2, V1, V2;
-    Matrix<double, 12, 6> G1, G2;
+    Matrix<double, 12, 12> F0, F1, F2, F3, D1, D2, D3, T1, T2, T3, V1, V2, V3;
+    Matrix<double, 12, 6> G1, G2, G3;
 
     // Definition of Parameters to simplify the computation's expressions
 
@@ -281,9 +296,14 @@ private:
     Matrix3d KFD_2;
     Matrix3d KTP_2;
     Matrix3d KTD_2;
+    Matrix3d KFP_3;
+    Matrix3d KFD_3;
+    Matrix3d KTP_3;
+    Matrix3d KTD_3;
 
     Matrix3d Rsc_1;
     Matrix3d Rsc_2;
+    Matrix3d Rsc_3;
 
     Vector3d com;
     Matrix3d Rb;
@@ -304,10 +324,19 @@ private:
     Vector3d fc_2;
     Vector3d tc_2;
 
+    Vector3d pc_3;
+    Matrix3d Rc_3;
+    Vector3d pc_d_3;
+    Vector3d oc_d_3;
+    Vector3d fc_3;
+    Vector3d tc_3;
+
     Matrix3d Rint_1;
     Matrix3d Cb_1;
     Matrix3d Rint_2;
     Matrix3d Cb_2;
+    Matrix3d Rint_3;
+    Matrix3d Cb_3;
 
     mc_rbdyn::Robots robots_;
     mc_rbdyn::Robots realRobots_;

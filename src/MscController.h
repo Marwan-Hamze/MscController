@@ -37,7 +37,7 @@ private:
     
     Eigen::Vector6d dof, dof_full;
 
-    Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
+    Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_, pRH_, thetaRH_, vRH_, omRH_, fRH_, tRH_;
 
     std::shared_ptr<msc_stabilizer::Stabilizer> stab_;
 
@@ -49,6 +49,9 @@ private:
 
     std::shared_ptr<mc_tasks::PositionTask> leftFoot_PosTask_;
     std::shared_ptr<mc_tasks::OrientationTask> leftFoot_OrTask_;
+
+    std::shared_ptr<mc_tasks::PositionTask> rightHand_PosTask_;
+    std::shared_ptr<mc_tasks::OrientationTask> rightHand_OrTask_;
     
     std::string observerPipelineName_ = "MscControllerObserverPipeline";
 };

@@ -115,7 +115,7 @@ Stabilizer::configuration Stabilizer::configure(mc_rbdyn::Robots &robots){
 configuration config;
 
 config.Id = Matrix3d::Identity();
-config.Id36 = Matrix<double, 36, 36>::Identity();
+config.Id48 = Matrix<double, 48, 48>::Identity();
 
 config.Zero3_3 << config.Zero3_3.Zero();
 config.Zero12_6 << config.Zero12_6.Zero();
@@ -141,16 +141,24 @@ config.Q.block(24,24,3,3).diagonal() = config.qLF_p;
 config.Q.block(27,27,3,3).diagonal() = config.qLF_R;
 config.Q.block(30,30,3,3).diagonal() = config.qLF_vel;
 config.Q.block(33,33,3,3).diagonal() = config.qLF_angvel;
+config.Q.block(36,36,3,3).diagonal() = config.qRH_p;
+config.Q.block(39,39,3,3).diagonal() = config.qRH_R;
+config.Q.block(42,42,3,3).diagonal() = config.qRH_vel;
+config.Q.block(45,45,3,3).diagonal() = config.qRH_angvel;
 
 config.R.block(0,0,3,3).diagonal() = config.rRF_lacc;
 config.R.block(3,3,3,3).diagonal() = config.rRF_aacc;
 config.R.block(6,6,3,3).diagonal() = config.rLF_lacc;
 config.R.block(9,9,3,3).diagonal() = config.rLF_aacc;
+config.R.block(12,12,3,3).diagonal() = config.rRH_lacc;
+config.R.block(15,15,3,3).diagonal() = config.rRH_aacc;
 
 config.W.block(12,12,3,3).diagonal() = config.wf_RF;
 config.W.block(15,15,3,3).diagonal() = config.wt_RF;
 config.W.block(24,24,3,3).diagonal() = config.wf_LF;
 config.W.block(27,27,3,3).diagonal() = config.wt_LF;
+config.W.block(36,36,3,3).diagonal() = config.wf_RH;
+config.W.block(39,39,3,3).diagonal() = config.wt_RH;
 
 config.KFP_RF << 30000, 0, 0, 0, 30000, 0, 0, 0, 30000;
 config.KFD_RF << 100, 0, 0, 0, 100, 0, 0, 0, 100;
@@ -165,6 +173,13 @@ config.KTP_LF << 400, 0, 0, 0, 400, 0, 0, 0, 400;
 config.KTD_LF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
+
+config.KFP_RH << 20000, 0, 0, 0, 20000, 0, 0, 0, 20000;
+config.KFD_RH << 100, 0, 0, 0, 100, 0, 0, 0, 100;
+config.KTP_RH << 600, 0, 0, 0, 600, 0, 0, 0, 600;
+config.KTD_RH << 5, 0, 0, 0, 5, 0, 0, 0, 5;
+
+config.Rsc_RH = robots.robot().bodyPosW("r_wrist").rotation().transpose();
 
 config.Kp << 0, 0, 0, 0, 0, 0, 0, 0, 0;
 config.Kd << 50, 0, 0, 0, 50, 0, 0, 0, 50;
@@ -189,16 +204,24 @@ config.Q.block(24,24,3,3).diagonal() = config.qLF_p;
 config.Q.block(27,27,3,3).diagonal() = config.qLF_R;
 config.Q.block(30,30,3,3).diagonal() = config.qLF_vel;
 config.Q.block(33,33,3,3).diagonal() = config.qLF_angvel;
+config.Q.block(36,36,3,3).diagonal() = config.qRH_p;
+config.Q.block(39,39,3,3).diagonal() = config.qRH_R;
+config.Q.block(42,42,3,3).diagonal() = config.qRH_vel;
+config.Q.block(45,45,3,3).diagonal() = config.qRH_angvel;
 
 config.R.block(0,0,3,3).diagonal() = config.rRF_lacc;
 config.R.block(3,3,3,3).diagonal() = config.rRF_aacc;
 config.R.block(6,6,3,3).diagonal() = config.rLF_lacc;
 config.R.block(9,9,3,3).diagonal() = config.rLF_aacc;
+config.R.block(12,12,3,3).diagonal() = config.rRH_lacc;
+config.R.block(15,15,3,3).diagonal() = config.rRH_aacc;
 
 config.W.block(12,12,3,3).diagonal() = config.wf_RF;
 config.W.block(15,15,3,3).diagonal() = config.wt_RF;
 config.W.block(24,24,3,3).diagonal() = config.wf_LF;
 config.W.block(27,27,3,3).diagonal() = config.wt_LF;
+config.W.block(36,36,3,3).diagonal() = config.wf_RH;
+config.W.block(39,39,3,3).diagonal() = config.wt_RH;
 
 }
 
@@ -207,8 +230,8 @@ config.W.block(27,27,3,3).diagonal() = config.wt_LF;
 Stabilizer::state Stabilizer::reference(mc_rbdyn::Robots &robots){
 
 state x_ref; 
-Matrix3d R, Rc_1,Rc_2;
-Vector3d pc_1, pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2;
+Matrix3d R, Rc_1, Rc_2, Rc_3;
+Vector3d pc_1, pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2, pc_3, pc_d_3, oc_d_3;
 
 R = robots.robot().posW().rotation().transpose();
 
@@ -221,6 +244,11 @@ pc_2 = robots.robot().bodyPosW("L_ANKLE_R_LINK").translation();
 Rc_2 = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
 pc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").linear();
 oc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").angular();
+
+pc_3 = robots.robot().bodyPosW("r_wrist").translation();
+Rc_3 = robots.robot().bodyPosW("r_wrist").rotation().transpose();
+pc_d_3 = robots.robot().bodyVelW("r_wrist").linear();
+oc_d_3 = robots.robot().bodyVelW("r_wrist").angular();
 
 x_ref.CoM.pos = robots.robot().com();
 x_ref.CoM.R = robots.robot().posW().rotation().transpose();
@@ -240,6 +268,13 @@ x_ref.leftFoot.vel = R.transpose() * (pc_d_2 - x_ref.CoM.vel - S(x_ref.CoM.angve
 x_ref.leftFoot.angvel = R.transpose() * (oc_d_2 - x_ref.CoM.angvel);
 x_ref.leftFoot.fc = Rc_2 * robots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(robots.robot()).force();
 x_ref.leftFoot.tc = Rc_2 * robots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(robots.robot()).moment();
+
+x_ref.rightHand.pos = robots.robot().X_b1_b2("base_link","r_wrist").translation();
+x_ref.rightHand.R = robots.robot().X_b1_b2("base_link","r_wrist").rotation().transpose();
+x_ref.rightHand.vel = R.transpose() * (pc_d_3 - x_ref.CoM.vel - S(x_ref.CoM.angvel) * (pc_3 - x_ref.CoM.pos));
+x_ref.rightHand.angvel = R.transpose() * (oc_d_3 - x_ref.CoM.angvel);
+x_ref.rightHand.fc = Rc_3 * robots.robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(robots.robot()).force();
+x_ref.rightHand.tc = Rc_3 * robots.robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(robots.robot()).moment();
 
 return x_ref;
 
@@ -261,6 +296,11 @@ feedback.Rc_2 = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose()
 feedback.pc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").linear();
 feedback.oc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").angular();
 
+feedback.pc_3 = robots.robot().bodyPosW("r_wrist").translation();
+feedback.Rc_3 = robots.robot().bodyPosW("r_wrist").rotation().transpose();
+feedback.pc_d_3 = robots.robot().bodyVelW("r_wrist").linear();
+feedback.oc_d_3 = robots.robot().bodyVelW("r_wrist").angular();
+
 feedback.x.CoM.pos = realRobots.robot().com();
 feedback.x.CoM.R = realRobots.robot().posW().rotation().transpose();
 feedback.x.CoM.vel = realRobots.robot().comVelocity();    
@@ -279,6 +319,13 @@ feedback.x.leftFoot.vel = feedback.R.transpose() * (feedback.pc_d_2 - feedback.x
 feedback.x.leftFoot.angvel = feedback.R.transpose() * (feedback.oc_d_2 - feedback.x.CoM.angvel);
 feedback.x.leftFoot.fc = feedback.Rc_2 * realRobots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots.robot()).force();
 feedback.x.leftFoot.tc = feedback.Rc_2 * realRobots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots.robot()).moment();
+
+feedback.x.rightHand.pos = robots.robot().X_b1_b2("base_link","r_wrist").translation();
+feedback.x.rightHand.R = robots.robot().X_b1_b2("base_link","r_wrist").rotation().transpose();
+feedback.x.rightHand.vel = feedback.R.transpose() * (feedback.pc_d_3 - feedback.x.CoM.vel - S(feedback.x.CoM.angvel) * (feedback.pc_3 - feedback.x.CoM.pos));
+feedback.x.rightHand.angvel = feedback.R.transpose() * (feedback.oc_d_3 - feedback.x.CoM.angvel);
+feedback.x.rightHand.fc = feedback.Rc_3 * realRobots.robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots.robot()).force();
+feedback.x.rightHand.tc = feedback.Rc_3 * realRobots.robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots.robot()).moment();
 
 
 return feedback;
@@ -314,10 +361,18 @@ Stabilizer::linearMatrix linearMatrix;
     KTP_2 = config.KTP_LF;
     KTD_2 = config.KTD_LF;
 
+    // Flexibility at the right hand
+    
+    KFP_3 = config.KFP_RH;
+    KFD_3 = config.KFD_RH;
+    KTP_3 = config.KTP_RH;
+    KTD_3 = config.KTD_RH;
+
     // Rest Orientation of the contact springs
 
     Rsc_1 = config.Rsc_RF;
     Rsc_2 = config.Rsc_LF;
+    Rsc_3 = config.Rsc_RH;
 
     // Base of the Robot's reference
 
@@ -344,6 +399,15 @@ Stabilizer::linearMatrix linearMatrix;
     fc_2 = x_ref.leftFoot.fc;
     tc_2 = x_ref.leftFoot.tc;
 
+    // Right hand reference
+
+    pc_3 = x_ref.rightHand.pos;
+    Rc_3 = x_ref.rightHand.R;
+    pc_d_3 = x_ref.rightHand.vel;
+    oc_d_3 = x_ref.rightHand.angvel;
+    fc_3 = x_ref.rightHand.fc;
+    tc_3 = x_ref.rightHand.tc;
+
 // Matrices to simplify the control matrices' expressions
 
 Rint_1 = Rsc_1 * Rc_1.transpose() * Rb.transpose();
@@ -352,20 +416,25 @@ Cb_1 = 0.5 * (S(config.ex) * Rint_1 * S(config.ex) + S(config.ey) * Rint_1 * S(c
 Rint_2 = Rsc_2 * Rc_2.transpose() * Rb.transpose();
 Cb_2 = 0.5 * (S(config.ex) * Rint_2 * S(config.ex) + S(config.ey) * Rint_2 * S(config.ey) + S(config.ez) * Rint_2 * S(config.ez));
 
+Rint_3 = Rsc_3 * Rc_3.transpose() * Rb.transpose();
+Cb_3 = 0.5 * (S(config.ex) * Rint_3 * S(config.ex) + S(config.ey) * Rint_3 * S(config.ey) + S(config.ez) * Rint_3 * S(config.ez));
+
 // Filling the Control Matrices
 
-A31 = -1/m * (KFP_1 + KFP_2);
+A31 = -1/m * (KFP_1 + KFP_2 + KFP_3);
 A32 = 1/m * (KFP_1 * S(Rb * pc_1) + KFD_1 * (S(Rb * pc_d_1) + S(o_d) * S(Rb * pc_1)) 
-    + KFP_2 * S(Rb * pc_2) + KFD_2 * (S(Rb * pc_d_2) + S(o_d) * S(Rb * pc_2)));
-A33 = -1/m * (KFD_1 + KFD_2);
-A34 = 1/m * (KFD_1 * S(Rb * pc_1) + KFD_2 * S(Rb * pc_2));
-A41 = - Rb * I.inverse() * Rb.transpose() * (S(Rb * pc_1) * KFP_1 + S(Rb * pc_2) * KFP_2);
+    + KFP_2 * S(Rb * pc_2) + KFD_2 * (S(Rb * pc_d_2) + S(o_d) * S(Rb * pc_2))
+    + KFP_3 * S(Rb * pc_3) + KFD_3 * (S(Rb * pc_d_3) + S(o_d) * S(Rb * pc_3)));
+A33 = -1/m * (KFD_1 + KFD_2 + KFD_3);
+A34 = 1/m * (KFD_1 * S(Rb * pc_1) + KFD_2 * S(Rb * pc_2) + KFD_3 * S(Rb * pc_3));
+A41 = - Rb * I.inverse() * Rb.transpose() * (S(Rb * pc_1) * KFP_1 + S(Rb * pc_2) * KFP_2 + S(Rb * pc_3) * KFP_3);
 A42 = Rb * I.inverse() * Rb.transpose() * (S(o_d) * Rb * I * Rb.transpose() * S(o_d) 
     + S(fc_1) * S(Rb * pc_1) + S(Rb * pc_1) * (KFP_1 * S(Rb * pc_1) + KFD_1 * (S(Rb * pc_d_1) + S(o_d) * S(Rb * pc_1))) + KTP_1 * Cb_1 + KTD_1 * S(Rb * oc_d_1) 
-    + S(fc_2) * S(Rb * pc_2) + S(Rb * pc_2) * (KFP_2 * S(Rb * pc_2) + KFD_2 * (S(Rb * pc_d_2) + S(o_d) * S(Rb * pc_2))) + KTP_2 * Cb_2 + KTD_2 * S(Rb * oc_d_2));
-A43 = - Rb * I.inverse() * Rb.transpose() * (S(Rb * pc_1) * KFD_1 + S(Rb * pc_2) * KFD_2);
+    + S(fc_2) * S(Rb * pc_2) + S(Rb * pc_2) * (KFP_2 * S(Rb * pc_2) + KFD_2 * (S(Rb * pc_d_2) + S(o_d) * S(Rb * pc_2))) + KTP_2 * Cb_2 + KTD_2 * S(Rb * oc_d_2)
+    + S(fc_3) * S(Rb * pc_3) + S(Rb * pc_3) * (KFP_3 * S(Rb * pc_3) + KFD_3 * (S(Rb * pc_d_3) + S(o_d) * S(Rb * pc_3))) + KTP_3 * Cb_3 + KTD_3 * S(Rb * oc_d_3));
+A43 = - Rb * I.inverse() * Rb.transpose() * (S(Rb * pc_1) * KFD_1 + S(Rb * pc_2) * KFD_2 + S(Rb * pc_3) * KFD_3);
 A44 = Rb * I.inverse() * Rb.transpose() * (S(Rb * I * Rb.transpose() * o_d) - S(o_d) * Rb * I * Rb.transpose() 
-    - KTD_1 + S(Rb * pc_1) * KFD_1 * S(Rb * pc_1) - KTD_2 + S(Rb * pc_2) * KFD_2 * S(Rb * pc_2));
+    - KTD_1 + S(Rb * pc_1) * KFD_1 * S(Rb * pc_1) - KTD_2 + S(Rb * pc_2) * KFD_2 * S(Rb * pc_2) - KTD_3 + S(Rb * pc_3) * KFD_3 * S(Rb * pc_3));
 
 F1_31 = -1/m * (KFP_1 + KFD_1 * S(o_d)) * Rb;
 F1_33 = -1/m * KFD_1 * Rb; 
@@ -381,17 +450,26 @@ F2_42 = Rb * I.inverse() * Rb.transpose() * KTP_2 * Cb_2 * Rb;
 F2_43 = - Rb * I.inverse() * Rb.transpose() * S(Rb * pc_2) * KFD_2 * Rb;
 F2_44 = - Rb * I.inverse() * Rb.transpose() * KTD_2 * Rb;
 
+F3_31 = -1/m * (KFP_3 + KFD_3 * S(o_d)) * Rb;
+F3_33 = -1/m * KFD_3 * Rb; 
+F3_41 = - Rb * I.inverse() * Rb.transpose() * (S(fc_3) + S(Rb * pc_3) * (KFD_3 * S(o_d) + KFP_3)) * Rb;
+F3_42 = Rb * I.inverse() * Rb.transpose() * KTP_3 * Cb_3 * Rb;
+F3_43 = - Rb * I.inverse() * Rb.transpose() * S(Rb * pc_3) * KFD_3 * Rb;
+F3_44 = - Rb * I.inverse() * Rb.transpose() * KTD_3 * Rb;
+
 D1 << config.Zero3_3, config.Zero3_3, config.Id, config.Zero3_3, 
       config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Id, 
       config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3, 
       config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3; 
 D2 = D1;
+D3 = D1;
 
 G1 << config.Zero3_3, config.Zero3_3, 
       config.Zero3_3, config.Zero3_3, 
       config.Id, config.Zero3_3, 
       config.Zero3_3, config.Id;
 G2 = G1;
+G3 = G1;
 
 F0 << config.Zero3_3, config.Zero3_3, config.Id, config.Zero3_3,  
       config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Id,
@@ -408,13 +486,20 @@ F2 << config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3,
       F2_31, config.Zero3_3, F2_33, config.Zero3_3, 
       F2_41, F2_42, F2_43, F2_44;
 
-linearMatrix.A << F0, F1, F2, 
-                  config.Zero12_12, D1, config.Zero12_12, 
-                  config.Zero12_12, config.Zero12_12, D2;
+F3 << config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3,  
+      config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3,
+      F3_31, config.Zero3_3, F3_33, config.Zero3_3, 
+      F3_41, F3_42, F3_43, F3_44;
 
-linearMatrix.B << config.Zero12_6, config.Zero12_6, 
-                  G1, config.Zero12_6, 
-                  config.Zero12_6, G2;
+linearMatrix.A << F0, F1, F2, F3,
+                  config.Zero12_12, D1, config.Zero12_12, config.Zero12_12, 
+                  config.Zero12_12, config.Zero12_12, D2, config.Zero12_12,
+                  config.Zero12_12, config.Zero12_12, config.Zero12_12, D3;
+
+linearMatrix.B << config.Zero12_6, config.Zero12_6, config.Zero12_6,
+                  G1, config.Zero12_6, config.Zero12_6,
+                  config.Zero12_6, G2, config.Zero12_6,
+                  config.Zero12_6, config.Zero12_6, G3;
 
 
 T1_11 = Rb.transpose();
@@ -431,6 +516,13 @@ T2_14 = - Rb.transpose() * KFP_2.inverse() * KFD_2 * S(Rb * pc_2);
 T2_22 = - Rb.transpose() * (Cb_2 + KTP_2.inverse() * KTD_2 * S(Rb * oc_d_2));
 T2_24 = Rb.transpose() * KTP_2.inverse() * KTD_2;
 
+T3_11 = Rb.transpose();
+T3_12 = - Rb.transpose() * (S(Rb * pc_3) + KFP_3.inverse() * KFD_3 * (S(Rb * pc_d_3) + S(o_d) * S(Rb * pc_3)));
+T3_13 = Rb.transpose() * KFP_3.inverse() * KFD_3;
+T3_14 = - Rb.transpose() * KFP_3.inverse() * KFD_3 * S(Rb * pc_3);
+T3_22 = - Rb.transpose() * (Cb_3 + KTP_3.inverse() * KTD_3 * S(Rb * oc_d_3));
+T3_24 = Rb.transpose() * KTP_3.inverse() * KTD_3;
+
 V1_11 = Rb.transpose() * (config.Id + KFP_1.inverse() * KFD_1 * S(o_d)) * Rb;
 V1_13 = Rb.transpose() * KFP_1.inverse() * KFD_1 * Rb;
 V1_22 = - Rb.transpose() * Cb_1 * Rb;
@@ -441,6 +533,11 @@ V2_13 = Rb.transpose() * KFP_2.inverse() * KFD_2 * Rb;
 V2_22 = - Rb.transpose() * Cb_2 * Rb;
 V2_24 = Rb.transpose() * KTP_2.inverse() * KTD_2 * Rb;
 
+V3_11 = Rb.transpose() * (config.Id + KFP_3.inverse() * KFD_3 * S(o_d)) * Rb;
+V3_13 = Rb.transpose() * KFP_3.inverse() * KFD_3 * Rb;
+V3_22 = - Rb.transpose() * Cb_3 * Rb;
+V3_24 = Rb.transpose() * KTP_3.inverse() * KTD_3 * Rb;
+
 T1 << T1_11, T1_12, T1_13, T1_14, 
       config.Zero3_3, T1_22, config.Zero3_3, T1_24, 
       config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3, 
@@ -448,6 +545,11 @@ T1 << T1_11, T1_12, T1_13, T1_14,
 
 T2 << T2_11, T2_12, T2_13, T2_14, 
       config.Zero3_3, T2_22, config.Zero3_3, T2_24, 
+      config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3, 
+      config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3;
+
+T3 << T3_11, T3_12, T3_13, T3_14, 
+      config.Zero3_3, T3_22, config.Zero3_3, T3_24, 
       config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3, 
       config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3;
 
@@ -461,9 +563,15 @@ V2 << V2_11, config.Zero3_3, V2_13, config.Zero3_3,
       config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3, 
       config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3;
 
-linearMatrix.M << config.Zero12_12, config.Zero12_12, config.Zero12_12, 
-                  T1, V1, config.Zero12_12, 
-                  T2, config.Zero12_12, V2;
+V3 << V3_11, config.Zero3_3, V3_13, config.Zero3_3, 
+      config.Zero3_3, V3_22, config.Zero3_3, V3_24, 
+      config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3, 
+      config.Zero3_3, config.Zero3_3, config.Zero3_3, config.Zero3_3;
+
+linearMatrix.M << config.Zero12_12, config.Zero12_12, config.Zero12_12, config.Zero12_12,
+                  T1, V1, config.Zero12_12, config.Zero12_12,
+                  T2, config.Zero12_12, V2, config.Zero12_12,
+                  T3, config.Zero12_12, config.Zero12_12, V3;
 
 
 return linearMatrix;
@@ -472,7 +580,7 @@ return linearMatrix;
 
 MatrixXd Stabilizer::computeGain(linearMatrix &linearMatrix, configuration &config){
 
-N = config.Id36 - config.W + config.W * linearMatrix.M;
+N = config.Id48 - config.W + config.W * linearMatrix.M;
 
 Ay = N * linearMatrix.A * N.inverse();
 By = N * linearMatrix.B;
@@ -484,7 +592,7 @@ Qy = N.inverse().transpose() * config.Q * N.inverse();
 
 MatrixXd K;
 
-K = Stabilizer::lqrGain(config.dt * Ay + config.Id36, config.dt * By, Qy, config.R, config.N_xu);
+K = Stabilizer::lqrGain(config.dt * Ay + config.Id48, config.dt * By, Qy, config.R, config.N_xu);
 
 return K;
 
@@ -502,6 +610,8 @@ f_delta_.block(0,0,3,1) = feedback.x.rightFoot.fc - x_ref.rightFoot.fc;
 f_delta_.block(3,0,3,1) = feedback.x.rightFoot.tc - x_ref.rightFoot.tc;
 f_delta_.block(6,0,3,1) = feedback.x.leftFoot.fc - x_ref.leftFoot.fc;
 f_delta_.block(9,0,3,1) = feedback.x.leftFoot.tc - x_ref.leftFoot.tc;
+f_delta_.block(12,0,3,1) = feedback.x.rightHand.fc - x_ref.rightHand.fc;
+f_delta_.block(15,0,3,1) = feedback.x.rightHand.tc - x_ref.rightHand.tc;
 
 x_delta_.block(0,0,3,1) = feedback.x.CoM.pos - x_ref.CoM.pos;
 x_delta_.block(3,0,3,1) = Mat2Ang(feedback.x.CoM.R * x_ref.CoM.R.transpose());
@@ -518,13 +628,21 @@ x_delta_.block(27,0,3,1) = Mat2Ang(feedback.x.leftFoot.R * x_ref.leftFoot.R.tran
 x_delta_.block(30,0,3,1) = feedback.x.leftFoot.vel - x_ref.leftFoot.vel;
 x_delta_.block(33,0,3,1) = feedback.x.leftFoot.angvel - x_ref.leftFoot.angvel;
 
+x_delta_.block(36,0,3,1) = feedback.x.rightHand.pos - x_ref.rightHand.pos;
+x_delta_.block(39,0,3,1) = Mat2Ang(feedback.x.rightHand.R * x_ref.rightHand.R.transpose());
+x_delta_.block(42,0,3,1) = feedback.x.rightHand.vel - x_ref.rightHand.vel;
+x_delta_.block(45,0,3,1) = feedback.x.rightHand.angvel - x_ref.rightHand.angvel;
+
 z_delta_.block(12,0,3,1) = - feedback.R.transpose() * config.KFP_RF.inverse() * (feedback.x.rightFoot.fc - x_ref.rightFoot.fc);
 z_delta_.block(15,0,3,1) = - feedback.R.transpose() * config.KTP_RF.inverse() * (feedback.x.rightFoot.tc - x_ref.rightFoot.tc);
 
 z_delta_.block(24,0,3,1) = - feedback.R.transpose() * config.KFP_LF.inverse() * (feedback.x.leftFoot.fc - x_ref.leftFoot.fc);
 z_delta_.block(27,0,3,1) = - feedback.R.transpose() * config.KTP_LF.inverse() * (feedback.x.leftFoot.tc - x_ref.leftFoot.tc);
 
-error = (config.Id36 - config.W) * x_delta_ + config.W * z_delta_;
+z_delta_.block(36,0,3,1) = - feedback.R.transpose() * config.KFP_RH.inverse() * (feedback.x.rightHand.fc - x_ref.rightHand.fc);
+z_delta_.block(39,0,3,1) = - feedback.R.transpose() * config.KTP_RH.inverse() * (feedback.x.rightHand.tc - x_ref.rightHand.tc);
+
+error = (config.Id48 - config.W) * x_delta_ + config.W * z_delta_;
 
 return error;
 
@@ -537,7 +655,7 @@ Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd &K, fe
 accelerations accelerations;
 
 Stabilizer::command u, ub;
-Vector3d pc_dd_1, oc_dd_1, pc_dd_2, oc_dd_2;
+Vector3d pc_dd_1, oc_dd_1, pc_dd_2, oc_dd_2, pc_dd_3, oc_dd_3;
 
 u = u.Zero();
 
@@ -548,6 +666,9 @@ oc_dd_1 << ub(3), ub(4), ub(5);
 
 pc_dd_2 << ub(6), ub(7), ub(8);
 oc_dd_2 << ub(9), ub(10), ub(11);
+
+pc_dd_3 << ub(12), ub(13), ub(14);
+oc_dd_3 << ub(15), ub(16), ub(17);
 
 /*  Generating com and base accelerations, using:
 
@@ -570,11 +691,16 @@ u.block(3,0,3,1) = fd.R * oc_dd_1 + S(fd.x.CoM.angvel) * (fd.oc_d_1 - fd.x.CoM.a
 u.block(6,0,3,1) = fd.R * pc_dd_2 - S(fd.x.CoM.angvel) * S(fd.x.CoM.angvel) * (fd.pc_2 - fd.x.CoM.pos) + S(accelerations.dwb) * (fd.pc_2 - fd.x.CoM.pos)
 + 2 * S(fd.x.CoM.angvel) * (fd.pc_d_2 - fd.x.CoM.vel) + accelerations.ddcom;
 u.block(9,0,3,1) = fd.R * oc_dd_2 + S(fd.x.CoM.angvel) * (fd.oc_d_2 - fd.x.CoM.angvel) + accelerations.dwb;
+u.block(12,0,3,1) = fd.R * pc_dd_3 - S(fd.x.CoM.angvel) * S(fd.x.CoM.angvel) * (fd.pc_3 - fd.x.CoM.pos) + S(accelerations.dwb) * (fd.pc_3 - fd.x.CoM.pos)
++ 2 * S(fd.x.CoM.angvel) * (fd.pc_d_3 - fd.x.CoM.vel) + accelerations.ddcom;
+u.block(15,0,3,1) = fd.R * oc_dd_3 + S(fd.x.CoM.angvel) * (fd.oc_d_3 - fd.x.CoM.angvel) + accelerations.dwb;
 
 accelerations.RF_linAcc = u.block(0,0,3,1);
 accelerations.RF_angAcc = u.block(3,0,3,1);
 accelerations.LF_linAcc = u.block(6,0,3,1);
 accelerations.LF_angAcc = u.block(9,0,3,1);
+accelerations.RH_linAcc = u.block(12,0,3,1);
+accelerations.RH_angAcc = u.block(15,0,3,1);
 
 return accelerations;
 

@@ -16,6 +16,9 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
   leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
 
+  rightHand_PosTask_ = std::make_shared<mc_tasks::PositionTask>("r_wrist", robots(), robots().robot().robotIndex(), 0, 250);
+  rightHand_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("r_wrist", robots(), robots().robot().robotIndex(), 0, 250);
+
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex()));
 
   mc_rtc::log::success("MscController initialization from Constructor done ");
@@ -42,6 +45,13 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   fLF_ = fLF_.Zero();
   tLF_ = tLF_.Zero();
 
+  pRH_ = pRH_.Zero();
+  thetaRH_ = thetaRH_.Zero();
+  vRH_ = vRH_.Zero();
+  omRH_ = omRH_.Zero();
+  fRH_ = fRH_.Zero();
+  tRH_ = tRH_.Zero();
+
   logger().addLogEntry("Error_com_Position", [this]() { return com_; });
   logger().addLogEntry("Error_com_Orientation", [this]() { return theta_; });
   logger().addLogEntry("Error_com_Velocity", [this]() { return comd_; });
@@ -61,10 +71,19 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("Error_LeftFoot_Force", [this]() { return fLF_; });
   logger().addLogEntry("Error_LeftFoot_Moment", [this]() { return tLF_; });
 
+  logger().addLogEntry("Error_RightHand_Position", [this]() { return pRH_; });
+  logger().addLogEntry("Error_RightHand_Orientation", [this]() { return thetaRH_; });
+  logger().addLogEntry("Error_RightHand_Velocity", [this]() { return vRH_; });
+  logger().addLogEntry("Error_RightHand_AngVelocity", [this]() { return omRH_; });
+  logger().addLogEntry("Error_RightHand_Force", [this]() { return fRH_; });
+  logger().addLogEntry("Error_RightHand_Moment", [this]() { return tRH_; });
+
   logger().addLogEntry("Accelerations_RightFoot_Linear", [this]() { return stab_->accelerations_.RF_linAcc;});
   logger().addLogEntry("Accelerations_RightFoot_Angular", [this]() { return stab_->accelerations_.RF_angAcc;});
   logger().addLogEntry("Accelerations_LeftFoot_Linear", [this]() { return stab_->accelerations_.LF_linAcc;});
   logger().addLogEntry("Accelerations_LeftFoot_Angular", [this]() { return stab_->accelerations_.LF_angAcc;});
+  logger().addLogEntry("Accelerations_RightHand_Linear", [this]() { return stab_->accelerations_.RH_linAcc;});
+  logger().addLogEntry("Accelerations_RightHand_Angular", [this]() { return stab_->accelerations_.RH_angAcc;});
 
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
   logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
@@ -110,6 +129,9 @@ bool MscController::run()
       mc_rtc::log::info("LeftFoot Linear Acceleration = \n{}\n" , stab_->accelerations_.LF_linAcc);
       mc_rtc::log::info("LeftFoot Angular Acceleration = \n{}\n" , stab_->accelerations_.LF_angAcc);
 
+      mc_rtc::log::info("RightHand Linear Acceleration = \n{}\n" , stab_->accelerations_.RH_linAcc);
+      mc_rtc::log::info("RightHand Angular Acceleration = \n{}\n" , stab_->accelerations_.RH_angAcc);
+
       }));
 
     gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The Error Vector", [this]() {
@@ -154,6 +176,9 @@ bool MscController::run()
 
     solver().addTask(leftFoot_PosTask_);
     solver().addTask(leftFoot_OrTask_);
+
+    solver().addTask(rightHand_PosTask_);
+    solver().addTask(rightHand_OrTask_);
 
 
     mc_rtc::log::success("Msc Stabilizer Enabled");
@@ -215,6 +240,15 @@ bool MscController::run()
   gui()->addElement({"Stabilizer","Tuning Q"}, mc_rtc::gui::ArrayInput("LF_angvel", [this]() {
     return stab_->config_.qLF_angvel; }, [this](Eigen::Vector3d LF_angvel){ stab_->config_.qLF_angvel = LF_angvel; }));
 
+  gui()->addElement({"Stabilizer","Tuning Q"}, mc_rtc::gui::ArrayInput("RH_pos", [this]() {
+    return stab_->config_.qRH_p; }, [this](Eigen::Vector3d RH_p){ stab_->config_.qRH_p = RH_p; }));
+  gui()->addElement({"Stabilizer","Tuning Q"}, mc_rtc::gui::ArrayInput("RH_rot", [this]() {
+    return stab_->config_.qRH_R; }, [this](Eigen::Vector3d RH_r){ stab_->config_.qRH_R = RH_r; }));
+  gui()->addElement({"Stabilizer","Tuning Q"}, mc_rtc::gui::ArrayInput("RH_vel", [this]() {
+    return stab_->config_.qRH_vel; }, [this](Eigen::Vector3d RH_vel){ stab_->config_.qRH_vel = RH_vel; }));
+  gui()->addElement({"Stabilizer","Tuning Q"}, mc_rtc::gui::ArrayInput("RH_angvel", [this]() {
+    return stab_->config_.qRH_angvel; }, [this](Eigen::Vector3d RH_angvel){ stab_->config_.qRH_angvel = RH_angvel; }));
+
   gui()->addElement({"Stabilizer","Tuning Q"}, mc_rtc::gui::Button("Update", [this]() {
     
     stab_->reconfigure(stab_->config_);
@@ -241,6 +275,10 @@ bool MscController::run()
     return stab_->config_.rLF_lacc; }, [this](Eigen::Vector3d LF_lacc){ stab_->config_.rLF_lacc = LF_lacc; }));
   gui()->addElement({"Stabilizer","Tuning R"}, mc_rtc::gui::ArrayInput("LF_angular_acc", [this]() {
     return stab_->config_.rLF_aacc; }, [this](Eigen::Vector3d LF_aacc){ stab_->config_.rLF_aacc = LF_aacc; }));
+  gui()->addElement({"Stabilizer","Tuning R"}, mc_rtc::gui::ArrayInput("RH_linear_acc", [this]() {
+    return stab_->config_.rRH_lacc; }, [this](Eigen::Vector3d RH_lacc){ stab_->config_.rRH_lacc = RH_lacc; }));
+  gui()->addElement({"Stabilizer","Tuning R"}, mc_rtc::gui::ArrayInput("RH_angular_acc", [this]() {
+    return stab_->config_.rRH_aacc; }, [this](Eigen::Vector3d RH_aacc){ stab_->config_.rRH_aacc = RH_aacc; }));
 
   gui()->addElement({"Stabilizer","Tuning R"}, mc_rtc::gui::Button("Update", [this]() {
     
@@ -268,6 +306,10 @@ bool MscController::run()
     return stab_->config_.wf_LF; }, [this](Eigen::Vector3d fc_LF){ stab_->config_.wf_LF = fc_LF; }));
   gui()->addElement({"Stabilizer","Tuning W"}, mc_rtc::gui::ArrayInput("tc_LF", [this]() {
     return stab_->config_.wt_LF; }, [this](Eigen::Vector3d tc_LF){ stab_->config_.wt_LF = tc_LF; }));
+  gui()->addElement({"Stabilizer","Tuning W"}, mc_rtc::gui::ArrayInput("fc_RH", [this]() {
+    return stab_->config_.wf_RH; }, [this](Eigen::Vector3d fc_RH){ stab_->config_.wf_RH = fc_RH; }));
+  gui()->addElement({"Stabilizer","Tuning W"}, mc_rtc::gui::ArrayInput("tc_RH", [this]() {
+    return stab_->config_.wt_RH; }, [this](Eigen::Vector3d tc_RH){ stab_->config_.wt_RH = tc_RH; }));
 
   gui()->addElement({"Stabilizer","Tuning W"}, mc_rtc::gui::Button("Update", [this]() {
     
@@ -308,6 +350,9 @@ bool MscController::run()
     solver().removeTask(leftFoot_PosTask_);
     solver().removeTask(leftFoot_OrTask_);
 
+    solver().removeTask(rightHand_PosTask_);
+    solver().removeTask(rightHand_OrTask_);
+
     mc_rtc::log::success("Msc Stabilizer Disabled");
     }));
 
@@ -347,6 +392,13 @@ bool MscController::run()
     fLF_ = stab_->f_delta_.block(6,0,3,1);
     tLF_ = stab_->f_delta_.block(9,0,3,1);
 
+    pRH_ = stab_->x_delta_.block(36,0,3,1);
+    thetaRH_ = stab_->x_delta_.block(39,0,3,1);
+    vRH_ = stab_->x_delta_.block(42,0,3,1);
+    omRH_ = stab_->x_delta_.block(45,0,3,1);
+    fRH_ = stab_->f_delta_.block(12,0,3,1);
+    tRH_ = stab_->f_delta_.block(15,0,3,1);
+
 
    //mc_rtc::log::info("Force Right Hand: \n{}\n", realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(robots().robot()).force());
 
@@ -376,6 +428,9 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
 
   leftFoot_PosTask_->reset();
   leftFoot_OrTask_->reset();
+
+  rightHand_PosTask_->reset();
+  rightHand_OrTask_->reset();
 
   const auto & observerp = observerPipeline(observerPipelineName_);
   
@@ -413,5 +468,10 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
       "Robot's CoM(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 240}}, [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoM(x)", [this]() { return realRobots().robot().com().x(); }, Color::Red));
+
+  gui()->addPlot(
+      "Right Hand Force(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 240}}, [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "f_RH(z)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red));
 
 }
