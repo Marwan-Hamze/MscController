@@ -174,9 +174,9 @@ config.KTD_LF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
 
-config.KFP_RH << 20000, 0, 0, 0, 20000, 0, 0, 0, 20000;
+config.KFP_RH << 30000, 0, 0, 0, 30000, 0, 0, 0, 30000;
 config.KFD_RH << 100, 0, 0, 0, 100, 0, 0, 0, 100;
-config.KTP_RH << 600, 0, 0, 0, 600, 0, 0, 0, 600;
+config.KTP_RH << 400, 0, 0, 0, 400, 0, 0, 0, 400;
 config.KTD_RH << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_RH = robots.robot().bodyPosW("r_wrist").rotation().transpose();
