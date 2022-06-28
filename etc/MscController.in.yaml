@@ -200,6 +200,12 @@ ObserverPipelines:
     - type: Attitude
       update: true
     - type: BodySensor
+      update: true
+      name: AccelerometerBodySensor
+      config:
+        bodySensor: Accelerometer
+    - type: KinematicInertial
+    - type: BodySensor
       update: false
       config:
         bodySensor: FloatingBase

@@ -12,10 +12,8 @@ using Eigen::MatrixXd;
 using Eigen::Matrix3d;
 
 Stabilizer::Stabilizer(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots, unsigned int robotIndex)
+    : robots_(robots), realRobots_(realRobots_), robotIndex_(robotIndex)
 {
-      robots_ = robots; 
-      realRobots_ = realRobots;
-      robotIndex_ = robotIndex;
 }
 
 // LQR function

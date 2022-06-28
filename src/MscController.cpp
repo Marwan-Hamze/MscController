@@ -18,6 +18,16 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex()));
 
+  double leftFootRatio = 0.5;
+  datastore().make_call("KinematicAnchorFrame::" + robot().name(),
+                          [this, &leftFootRatio](const mc_rbdyn::Robot & robot)
+                          {
+                            return sva::interpolate(robot.surfacePose("LeftFoot"),
+                                                    robot.surfacePose("RightFoot"),
+                                                    leftFootRatio);
+                          });
+
+
   mc_rtc::log::success("MscController initialization from Constructor done ");
 
   dof << 0, 0, 0, 0, 0, 0;

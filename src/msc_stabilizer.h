@@ -308,8 +308,8 @@ private:
     Matrix3d Rint_2;
     Matrix3d Cb_2;
 
-    mc_rbdyn::Robots robots_;
-    mc_rbdyn::Robots realRobots_;
+    mc_rbdyn::Robots & robots_;
+    mc_rbdyn::Robots & realRobots_;
 
     unsigned int robotIndex_;
 
