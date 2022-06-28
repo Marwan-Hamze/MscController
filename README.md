@@ -2,4 +2,4 @@ This project implements a controller in c++ that aims to maintain the balance of
 
 The controller is written using the [mc_rtc](https://jrl-umi3218.github.io/mc_rtc/index.html) framework.
 
-The main branch is best suitable for multi-contacts (not yet, working on it!), while the 2_contacts branch is suitable for 2 contacts made by the robot's feet.
+The main branch is best suitable for multi-contacts (not the best perfomance yet!), while the 2_contacts branch is suitable for 2 contacts made by the robot's feet.
