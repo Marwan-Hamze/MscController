@@ -5,7 +5,7 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 {
   config_.load(config);
   
-  solver().addConstraintSet(dynamicsConstraint);
+  solver().addConstraintSet(kinematicsConstraint);
 
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 10);
   baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 10);
@@ -442,8 +442,8 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   if (!init) {
     gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Initialize", [this]() {
 
-      solver().removeConstraintSet(dynamicsConstraint);
-      solver().addConstraintSet(kinematicsConstraint);
+      //solver().removeConstraintSet(dynamicsConstraint);
+      //solver().addConstraintSet(kinematicsConstraint);
 
       removeContact({robot().name(), "ground", "RightFoot", "AllGround"});
       removeContact({robot().name(), "ground", "LeftFoot", "AllGround"});
@@ -460,17 +460,17 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
 
   using Color = mc_rtc::gui::Color;
   gui()->addPlot(
-      "Right Foot CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 240}}, [this]() { return t_; }),
+      "Right Foot CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoP(x)", [this]() { return realRobots().robot().cop("RightFoot").x(); }, Color::Blue));
 
   gui()->addPlot(
-      "Robot's CoM(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 240}}, [this]() { return t_; }),
+      "Robot's CoM(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoM(x)", [this]() { return realRobots().robot().com().x(); }, Color::Red));
 
   gui()->addPlot(
-      "Right Hand Force(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 240}}, [this]() { return t_; }),
+      "Right Hand Force(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "f_RH(z)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red));
 

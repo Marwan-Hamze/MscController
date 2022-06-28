@@ -79,9 +79,14 @@ states:
         above: [LeftFoot, RightFoot]
         weight: 2000
         stiffness: 5
-      KeepChest:
+      KeepTorso:
         type: orientation
         body: torso
+        weight: 1000
+        stiffness: 1
+      KeepBase:
+        type: orientation
+        body: base_link
         weight: 1000
         stiffness: 1
   
