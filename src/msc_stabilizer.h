@@ -123,22 +123,22 @@ protected:
 
         Matrix<double, 48, 18> N_xu;
 
-        Vector3d qcom_p {3000000000, 3000000000, 3000000000};
+        Vector3d qcom_p {30000000000000, 30000000000000, 30000000000000};
         Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {10000000, 10000000, 10000000};
+        Vector3d qcom_vel {100000000, 100000000, 100000000};
         Vector3d qcom_angvel {1, 1, 1};
 
-        Vector3d qRF_p {3000000000, 3000000000, 3000000000};
+        Vector3d qRF_p {10000000000000, 10000000000000, 10000000000000};
         Vector3d qRF_R {1, 1, 1};
-        Vector3d qRF_vel {3000000, 3000000, 3000000};
+        Vector3d qRF_vel {3000000000, 3000000000, 3000000000};
         Vector3d qRF_angvel {1, 1, 1};
 
-        Vector3d qLF_p {3000000000, 3000000000, 3000000000};
+        Vector3d qLF_p {10000000000000, 10000000000000, 10000000000000};
         Vector3d qLF_R {1, 1, 1};
-        Vector3d qLF_vel {3000000, 3000000, 3000000};
+        Vector3d qLF_vel {3000000000, 3000000000, 3000000000};
         Vector3d qLF_angvel {1, 1, 1};
 
-        Vector3d qRH_p {3000000000, 3000000000, 3000000000};
+        Vector3d qRH_p {3000000, 3000000, 3000000};
         Vector3d qRH_R {1, 1, 1};
         Vector3d qRH_vel {3000000, 3000000, 3000000};
         Vector3d qRH_angvel {1, 1, 1};
