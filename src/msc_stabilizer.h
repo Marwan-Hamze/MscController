@@ -119,19 +119,19 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {1, 1, 1};
+        Vector3d qcom_p {10000, 10000, 10000};
         Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {1, 1, 1};
+        Vector3d qcom_vel {30000, 30000, 30000};
         Vector3d qcom_angvel {1, 1, 1};
 
-        Vector3d qRF_p {1, 1, 1};
+        Vector3d qRF_p {100, 100, 100};
         Vector3d qRF_R {1, 1, 1};
-        Vector3d qRF_vel {1, 1, 1};
+        Vector3d qRF_vel {10, 10, 10};
         Vector3d qRF_angvel {1, 1, 1};
 
-        Vector3d qLF_p {1, 1, 1};
+        Vector3d qLF_p {100, 100, 100};
         Vector3d qLF_R {1, 1, 1};
-        Vector3d qLF_vel {1, 1, 1};
+        Vector3d qLF_vel {10, 10, 10};
         Vector3d qLF_angvel {1, 1, 1};
 
         Vector3d rRF_lacc {1, 1, 1};
@@ -139,10 +139,10 @@ protected:
         Vector3d rLF_lacc {1, 1, 1};
         Vector3d rLF_aacc {1, 1, 1};
 
-        Vector3d wf_RF {0.5, 0.5, 0.5};
-        Vector3d wt_RF {0.5, 0.5, 0.5};
-        Vector3d wf_LF {0.5, 0.5, 0.5};
-        Vector3d wt_LF {0.5, 0.5, 0.5};
+        Vector3d wf_RF {0, 0, 0.95};
+        Vector3d wt_RF {0.95, 0.95, 0.95};
+        Vector3d wf_LF {0, 0, 0.95};
+        Vector3d wt_LF {0.95, 0.95, 0.95};
 
         Matrix3d KFP_RF, KFP_LF;
         Matrix3d KFD_RF, KFD_LF;
@@ -152,6 +152,8 @@ protected:
         Matrix3d Rsc_RF, Rsc_LF;
 
         Matrix3d Kp, Kd;
+        Matrix3d Kf, Kt;
+
 
         double dt = 0.005;
 
@@ -219,7 +221,7 @@ public:
 
     // This function computes the state and force errors (scaled), and returns a trade-off between the 2 errors in a different error vector
 
-    error computeError(state &x_ref, feedback &feedback, configuration &config);
+    error computeError(state &x_ref, feedback &feedback, linearMatrix &linearMatrix, configuration &config);
 
     // This function generates the accelerations written in the world frame for the contact tasks
 
@@ -238,6 +240,7 @@ public:
     Matrix<double, 12, 1> f_delta_;
     error x_delta_;
     error z_delta_;
+    error v_delta_;
 
     error error_;
 

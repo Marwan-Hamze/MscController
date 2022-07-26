@@ -5,7 +5,7 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 {
   config_.load(config);
   
-  solver().addConstraintSet(dynamicsConstraint);
+  //solver().addConstraintSet(dynamicsConstraint);
 
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 10);
   baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 10);
@@ -79,8 +79,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
   logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
 
-  logger().addLogEntry("RightHand_Force", [this]() {return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force();});
-  logger().addLogEntry("RightHand_Moment", [this]() {return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).moment();});
+  //logger().addLogEntry("RightHand_Force", [this]() {return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force();});
+  //logger().addLogEntry("RightHand_Moment", [this]() {return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).moment();});
 
 }
 
@@ -141,6 +141,12 @@ bool MscController::run()
     gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The Force Error", [this]() {
       
       mc_rtc::log::info("Force Error = \n{}\n" , stab_->f_delta_);
+
+      }));
+
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The Admittance Error", [this]() {
+      
+      mc_rtc::log::info("Admittance Error = \n{}\n" , stab_->v_delta_);
 
       }));
 
@@ -330,7 +336,7 @@ bool MscController::run()
 
   if (ref) {
     stab_->feedback_ = stab_->getFeedback(robots(), realRobots());
-    stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->config_);
+    stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->linearMatrix_, stab_->config_);
     stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, realRobots());
 
     comTask_->refAccel(stab_->accelerations_.ddcom);
@@ -361,6 +367,15 @@ bool MscController::run()
     fLF_ = stab_->f_delta_.block(6,0,3,1);
     tLF_ = stab_->f_delta_.block(9,0,3,1);
 
+
+    //mc_rtc::log::info("Test: \n{}\n", realRobots().robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose());
+
+/*  mc_rtc::log::info("Reference: \n{}\n", stab_->x_ref_.CoM.pos);
+    mc_rtc::log::info("Reference: \n{}\n", stab_->x_ref_.rightFoot.pos);
+    mc_rtc::log::info("Reference: \n{}\n", stab_->x_ref_.rightFoot.R); */
+
+/*    mc_rtc::log::info("Base rot: \n{}\n", realRobots().robot().posW().rotation().transpose());
+   mc_rtc::log::info("Base pos: \n{}\n", realRobots().robot().posW().translation()); */
 
    //mc_rtc::log::info("Force Right Hand: \n{}\n", realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(robots().robot()).force());
 
@@ -401,14 +416,14 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   if (!init) {
     gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Initialize", [this]() {
 
-      solver().removeConstraintSet(dynamicsConstraint);
+/*       solver().removeConstraintSet(dynamicsConstraint);
       solver().addConstraintSet(kinematicsConstraint);
 
       removeContact({robot().name(), "ground", "RightFoot", "AllGround"});
       removeContact({robot().name(), "ground", "LeftFoot", "AllGround"});
 
       addContact({robot().name(), "ground", "RightFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof});
-      addContact({robot().name(), "ground", "LeftFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof});
+      addContact({robot().name(), "ground", "LeftFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof}); */
 
       mc_rtc::log::info("Feet Contacts are now free to move\n");
 

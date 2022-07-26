@@ -164,8 +164,11 @@ config.KTD_LF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
 
-config.Kp << 0, 0, 0, 0, 0, 0, 0, 0, 0;
-config.Kd << 50, 0, 0, 0, 50, 0, 0, 0, 50;
+config.Kp << 50, 0, 0, 0, 50, 0, 0, 0, 50;
+config.Kd << 10, 0, 0, 0, 10, 0, 0, 0, 10;
+
+config.Kf << 0, 0, 0, 0, 0, 0, 0, 0, 0;
+config.Kt << 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
 return config;
 
@@ -209,31 +212,39 @@ Matrix3d R, Rc_1,Rc_2;
 Vector3d pc_1, pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2;
 
 R = robots.robot().posW().rotation().transpose();
+//R = R.Identity();
 
 pc_1 = robots.robot().bodyPosW("R_ANKLE_R_LINK").translation();
 Rc_1 = robots.robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose();
+//Rc_1 = R;
 pc_d_1 = robots.robot().bodyVelW("R_ANKLE_R_LINK").linear();
 oc_d_1 = robots.robot().bodyVelW("R_ANKLE_R_LINK").angular();
 
 pc_2 = robots.robot().bodyPosW("L_ANKLE_R_LINK").translation();
 Rc_2 = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
+//Rc_2 = R;
 pc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").linear();
 oc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").angular();
 
 x_ref.CoM.pos = robots.robot().com();
 x_ref.CoM.R = robots.robot().posW().rotation().transpose();
+//x_ref.CoM.R = R;
 x_ref.CoM.vel = robots.robot().comVelocity();    
 x_ref.CoM.angvel = robots.robot().bodyVelW("base_link").angular();
 
-x_ref.rightFoot.pos = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").translation();
-x_ref.rightFoot.R = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").rotation().transpose();
+/* x_ref.rightFoot.pos = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").translation();
+x_ref.rightFoot.R = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").rotation().transpose(); */
+x_ref.rightFoot.pos = R.transpose() * (pc_1 - x_ref.CoM.pos);
+x_ref.rightFoot.R = R.transpose() * Rc_1;
 x_ref.rightFoot.vel = R.transpose() * (pc_d_1 - x_ref.CoM.vel - S(x_ref.CoM.angvel) * (pc_1 - x_ref.CoM.pos));
 x_ref.rightFoot.angvel = R.transpose() * (oc_d_1 - x_ref.CoM.angvel);
 x_ref.rightFoot.fc = Rc_1 * robots.robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(robots.robot()).force();
 x_ref.rightFoot.tc = Rc_1 * robots.robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(robots.robot()).moment();
 
-x_ref.leftFoot.pos = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").translation();
-x_ref.leftFoot.R = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").rotation().transpose();
+/* x_ref.leftFoot.pos = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").translation();
+x_ref.leftFoot.R = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").rotation().transpose(); */
+x_ref.leftFoot.pos = R.transpose() * (pc_2 - x_ref.CoM.pos);
+x_ref.leftFoot.R = R.transpose() * Rc_2;
 x_ref.leftFoot.vel = R.transpose() * (pc_d_2 - x_ref.CoM.vel - S(x_ref.CoM.angvel) * (pc_2 - x_ref.CoM.pos));
 x_ref.leftFoot.angvel = R.transpose() * (oc_d_2 - x_ref.CoM.angvel);
 x_ref.leftFoot.fc = Rc_2 * robots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(robots.robot()).force();
@@ -264,15 +275,19 @@ feedback.x.CoM.R = realRobots.robot().posW().rotation().transpose();
 feedback.x.CoM.vel = realRobots.robot().comVelocity();    
 feedback.x.CoM.angvel = realRobots.robot().bodyVelW("base_link").angular();
 
-feedback.x.rightFoot.pos = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").translation();
-feedback.x.rightFoot.R = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").rotation().transpose();
+/* feedback.x.rightFoot.pos = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").translation();
+feedback.x.rightFoot.R = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").rotation().transpose(); */
+feedback.x.rightFoot.pos = feedback.R.transpose() * (feedback.pc_1 - feedback.x.CoM.pos);
+feedback.x.rightFoot.R = feedback.R.transpose() * feedback.Rc_1;
 feedback.x.rightFoot.vel = feedback.R.transpose() * (feedback.pc_d_1 - feedback.x.CoM.vel - S(feedback.x.CoM.angvel) * (feedback.pc_1 - feedback.x.CoM.pos));
 feedback.x.rightFoot.angvel = feedback.R.transpose() * (feedback.oc_d_1 - feedback.x.CoM.angvel);
 feedback.x.rightFoot.fc = feedback.Rc_1 * realRobots.robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots.robot()).force();
 feedback.x.rightFoot.tc = feedback.Rc_1 * realRobots.robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots.robot()).moment();
 
-feedback.x.leftFoot.pos = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").translation();
-feedback.x.leftFoot.R = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").rotation().transpose();
+/* feedback.x.leftFoot.pos = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").translation();
+feedback.x.leftFoot.R = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").rotation().transpose(); */
+feedback.x.leftFoot.pos = feedback.R.transpose() * (feedback.pc_2 - feedback.x.CoM.pos);
+feedback.x.leftFoot.R = feedback.R.transpose() * feedback.Rc_2;
 feedback.x.leftFoot.vel = feedback.R.transpose() * (feedback.pc_d_2 - feedback.x.CoM.vel - S(feedback.x.CoM.angvel) * (feedback.pc_2 - feedback.x.CoM.pos));
 feedback.x.leftFoot.angvel = feedback.R.transpose() * (feedback.oc_d_2 - feedback.x.CoM.angvel);
 feedback.x.leftFoot.fc = feedback.Rc_2 * realRobots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots.robot()).force();
@@ -488,13 +503,14 @@ return K;
 
 }
 
-Stabilizer::error Stabilizer::computeError(state &x_ref, feedback &feedback, configuration &config){
+Stabilizer::error Stabilizer::computeError(state &x_ref, feedback &feedback, linearMatrix &linearMatrix, configuration &config){
 
 error error;
 
 x_delta_ = x_delta_.Zero();
 z_delta_ = z_delta_.Zero();
 f_delta_ = f_delta_.Zero();
+v_delta_ = v_delta_.Zero();
 
 f_delta_.block(0,0,3,1) = feedback.x.rightFoot.fc - x_ref.rightFoot.fc;
 f_delta_.block(3,0,3,1) = feedback.x.rightFoot.tc - x_ref.rightFoot.tc;
@@ -522,7 +538,13 @@ z_delta_.block(15,0,3,1) = - feedback.R.transpose() * config.KTP_RF.inverse() * 
 z_delta_.block(24,0,3,1) = - feedback.R.transpose() * config.KFP_LF.inverse() * (feedback.x.leftFoot.fc - x_ref.leftFoot.fc);
 z_delta_.block(27,0,3,1) = - feedback.R.transpose() * config.KTP_LF.inverse() * (feedback.x.leftFoot.tc - x_ref.leftFoot.tc);
 
-error = (config.Id36 - config.W) * x_delta_ + config.W * z_delta_;
+v_delta_.block(18,0,3,1) =  config.Kf * feedback.R.transpose() * (f_delta_.block(0,0,3,1) - (- config.KFP_RF * feedback.R * linearMatrix.M.block(12,0,3,36) * x_delta_));
+v_delta_.block(21,0,3,1) =  config.Kt * feedback.R.transpose() * (f_delta_.block(3,0,3,1) - (- config.KTP_RF * feedback.R * linearMatrix.M.block(15,0,3,36) * x_delta_));
+
+v_delta_.block(30,0,3,1) =  config.Kf * feedback.R.transpose() * (f_delta_.block(6,0,3,1) - (- config.KFP_LF * feedback.R * linearMatrix.M.block(24,0,3,36) * x_delta_));
+v_delta_.block(33,0,3,1) =  config.Kt * feedback.R.transpose() * (f_delta_.block(9,0,3,1) - (- config.KTP_LF * feedback.R * linearMatrix.M.block(27,0,3,36) * x_delta_));
+
+error = (config.Id36 - config.W) * x_delta_ + config.W * z_delta_ + v_delta_;
 
 return error;
 
@@ -536,16 +558,11 @@ accelerations accelerations;
 
 Stabilizer::command u, ub;
 Vector3d pc_dd_1, oc_dd_1, pc_dd_2, oc_dd_2;
+Vector3d gamma, pc_1_w, pc_2_w;
+double xsi;
 
 u = u.Zero();
-
-ub = - K * error;
-
-pc_dd_1 << ub(0), ub(1), ub(2);
-oc_dd_1 << ub(3), ub(4), ub(5);
-
-pc_dd_2 << ub(6), ub(7), ub(8);
-oc_dd_2 << ub(9), ub(10), ub(11);
+gamma = gamma.Zero();
 
 /*  Generating com and base accelerations, using:
 
@@ -557,6 +574,32 @@ oc_dd_2 << ub(9), ub(10), ub(11);
 accelerations.ddcom = - config.Kp * (robots.robot().com() - x_ref.CoM.pos) - config.Kd * (robots.robot().comVelocity() - x_ref.CoM.vel);
 accelerations.dwb = - config.Kp * Mat2Ang(robots.robot().posW().rotation().transpose() * x_ref.CoM.R.transpose()) - config.Kd * (robots.robot().bodyVelW("base_link").angular() - x_ref.CoM.angvel);
  
+// Testing a CoM strategy inspired by Murooka's paper (2021)
+
+/* pc_1_w = fd.x.CoM.R * fd.x.rightFoot.pos + fd.x.CoM.pos - (x_ref.CoM.R * x_ref.rightFoot.pos + x_ref.CoM.pos);
+pc_2_w = fd.x.CoM.R * fd.x.leftFoot.pos + fd.x.CoM.pos - (x_ref.CoM.R * x_ref.leftFoot.pos + x_ref.CoM.pos);
+
+
+xsi = config.m * (accelerations.ddcom.coeff(2) + 9.81);
+
+gamma.block(0,0,1,1) = 1/xsi * (pc_1_w.block(2,0,1,1) * f_delta_.block(0,0,1,1) - pc_1_w.block(0,0,1,1) * f_delta_.block(2,0,1,1) + f_delta_.block(4,0,1,1) + 
+                        pc_2_w.block(2,0,1,1) * f_delta_.block(6,0,1,1) - pc_2_w.block(0,0,1,1) * f_delta_.block(8,0,1,1) + f_delta_.block(10,0,1,1));
+
+gamma.block(1,0,1,1) = 1/xsi * (pc_1_w.block(2,0,1,1) * f_delta_.block(1,0,1,1) - pc_1_w.block(1,0,1,1) * f_delta_.block(2,0,1,1) + f_delta_.block(3,0,1,1) + 
+                        pc_2_w.block(2,0,1,1) * f_delta_.block(7,0,1,1) - pc_2_w.block(1,0,1,1) * f_delta_.block(8,0,1,1) + f_delta_.block(9,0,1,1));
+
+error.block(0,0,3,1) = error.block(0,0,3,1) - gamma; */
+
+// Calculating the accelerations in the base frame
+
+ub = - K * error;
+
+pc_dd_1 << ub(0), ub(1), ub(2);
+oc_dd_1 << ub(3), ub(4), ub(5);
+
+pc_dd_2 << ub(6), ub(7), ub(8);
+oc_dd_2 << ub(9), ub(10), ub(11);
+
 /* Transforming the accelerations from the base frame to the world frame, using:
 
   pc_dd = Rb*pc_dd_b - S^2(wb)*(pc-com) + S(dwb)*(pc - com) + 2S(wb)(pc_d-dcom) + ddcom;

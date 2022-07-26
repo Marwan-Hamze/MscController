@@ -28,7 +28,7 @@ robots:
 # General constraints, always on
 constraints:
 - type: contact
-#- type: dynamics
+- type: kinematics
   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
 # Collision constraint
@@ -50,12 +50,12 @@ contacts:
   r2: ground
   r1Surface: LeftFoot
   r2Surface: AllGround
-  dof: [1,1,1,1,1,1]
+  dof: [0,0,0,0,0,0]
 - r1: hrp4
   r2: ground
   r1Surface: RightFoot
   r2Surface: AllGround
-  dof: [1,1,1,1,1,1]
+  dof: [0,0,0,0,0,0]
       #[1,1,1,1,1,1]
       #[0,0,0,0,0,0]
 
@@ -190,22 +190,27 @@ transitions:
 
 # Initial state
 init: MscController_Initial
-#Observer
+#Observer Pipelines
 ObserverPipelines:
   name: "MscControllerObserverPipeline"
   gui: true
   observers:
     - type: Encoder
-      update: true
     - type: Attitude
-      update: true
-    - type: BodySensor
-      update: true
-      name: AccelerometerBodySensor
-      config:
-        bodySensor: Accelerometer
+      required: false
     - type: KinematicInertial
+      config:
+        anchorFrame:
+          maxAnchorFrameDiscontinuity: 0.02
     - type: BodySensor
       update: false
-      config:
-        bodySensor: FloatingBase
+
+#    - type: BodySensor
+#      update: false
+#      name: AccelerometerBodySensor
+#      config:
+#        bodySensor: Accelerometer
+#    - type: BodySensor
+#      update: false
+#      config:
+#        bodySensor: FloatingBase
