@@ -204,13 +204,3 @@ ObserverPipelines:
           maxAnchorFrameDiscontinuity: 0.02
     - type: BodySensor
       update: false
-
-#    - type: BodySensor
-#      update: false
-#      name: AccelerometerBodySensor
-#      config:
-#        bodySensor: Accelerometer
-#    - type: BodySensor
-#      update: false
-#      config:
-#        bodySensor: FloatingBase

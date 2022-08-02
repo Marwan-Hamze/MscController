@@ -12,6 +12,9 @@
 using Eigen::Matrix;
 using Eigen::Vector3d;
 
+
+// Constructor for the mc_rtc FSM controller
+
 struct MscController_DLLAPI MscController : public mc_control::fsm::Controller
 {
     MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config);
@@ -22,11 +25,14 @@ struct MscController_DLLAPI MscController : public mc_control::fsm::Controller
 
 protected:
   
-  double t_ = 0; ///< Elapsed time since the controller started
+  // Elapsed time since the controller started, used for plotting curves in RViz
+  double t_ = 0;
 
 private:
 
     mc_rtc::Configuration config_;
+
+    // The booleans below are used for the GUI customization
 
     bool stabilizer = false;
     bool flip = false;
@@ -35,8 +41,10 @@ private:
     bool ref = false;
     bool compute = false;
     
+    // The 6d vectors below are used to free or fix the contacts to the ground. They have no effect in this branch, their use is in the multi-contact situation
     Eigen::Vector6d dof, dof_full;
 
+    // Vectors to add error signals to the logs
     Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
 
     std::shared_ptr<msc_stabilizer::Stabilizer> stab_;

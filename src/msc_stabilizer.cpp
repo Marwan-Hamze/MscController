@@ -16,7 +16,7 @@ Stabilizer::Stabilizer(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots, u
 {
 }
 
-// LQR function
+// LQR Gain calculation method
 
 MatrixXd Stabilizer::lqrGain(MatrixXd A, MatrixXd B, MatrixXd Q, MatrixXd R,
                     MatrixXd N, double eps) {
@@ -203,11 +203,12 @@ config.W.block(27,27,3,3).diagonal() = config.wt_LF;
 
 }
 
-// Adding reference values, in addition to contact information
+// Getting reference values
 
 Stabilizer::state Stabilizer::reference(mc_rbdyn::Robots &robots){
 
 state x_ref; 
+// The below variables are used to make the frame transformations
 Matrix3d R, Rc_1,Rc_2;
 Vector3d pc_1, pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2;
 
@@ -254,6 +255,8 @@ return x_ref;
 
 }
 
+// Getting the feedback from robot and realRobot
+
 Stabilizer::feedback Stabilizer::getFeedback(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots){
 
 feedback feedback;
@@ -298,7 +301,7 @@ return feedback;
 
 }
 
-// Compute function
+// Linearized Matrices Computation (A, B and M)
 
 Stabilizer::linearMatrix Stabilizer::computeMatrix(state &x_ref, configuration &config) {
 
@@ -483,6 +486,8 @@ return linearMatrix;
 
 }
 
+// Computing the LQR Gain
+
 MatrixXd Stabilizer::computeGain(linearMatrix &linearMatrix, configuration &config){
 
 N = config.Id36 - config.W + config.W * linearMatrix.M;
@@ -492,8 +497,7 @@ By = N * linearMatrix.B;
 
 Qy = N.inverse().transpose() * config.Q * N.inverse();
 
-// Computing the Control Gain
-// As the LQR calculation is discrete for an infinite horizon, we should use the matrices Ay and By in their discrete form 
+// As the LQR calculation method is discrete for an infinite horizon, we should use the matrices Ay and By in their discrete form 
 
 MatrixXd K;
 
@@ -502,6 +506,8 @@ K = Stabilizer::lqrGain(config.dt * Ay + config.Id36, config.dt * By, Qy, config
 return K;
 
 }
+
+// Error vectors computation, and addition of the admittance gain (commented the gain is set to zero in the configuration as it didn't show improvement)
 
 Stabilizer::error Stabilizer::computeError(state &x_ref, feedback &feedback, linearMatrix &linearMatrix, configuration &config){
 
@@ -538,6 +544,8 @@ z_delta_.block(15,0,3,1) = - feedback.R.transpose() * config.KTP_RF.inverse() * 
 z_delta_.block(24,0,3,1) = - feedback.R.transpose() * config.KFP_LF.inverse() * (feedback.x.leftFoot.fc - x_ref.leftFoot.fc);
 z_delta_.block(27,0,3,1) = - feedback.R.transpose() * config.KTP_LF.inverse() * (feedback.x.leftFoot.tc - x_ref.leftFoot.tc);
 
+// Admittance gains
+
 v_delta_.block(18,0,3,1) =  config.Kf * feedback.R.transpose() * (f_delta_.block(0,0,3,1) - (- config.KFP_RF * feedback.R * linearMatrix.M.block(12,0,3,36) * x_delta_));
 v_delta_.block(21,0,3,1) =  config.Kt * feedback.R.transpose() * (f_delta_.block(3,0,3,1) - (- config.KTP_RF * feedback.R * linearMatrix.M.block(15,0,3,36) * x_delta_));
 
@@ -550,7 +558,7 @@ return error;
 
 }
 
-// Feet tasks generation
+// Accelerations calculations
 
 Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd &K, feedback &fd, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots){
 
@@ -566,15 +574,15 @@ gamma = gamma.Zero();
 
 /*  Generating com and base accelerations, using:
 
- ddcom = Kp(com - com_ref) + Kd(dcom - dcom_ref) + ddcom_ref
- dwb = Kp* Mat2Ang(R * R_ref') + Kd(wb - wb_ref) + dwb_ref 
+ ddcom = - Kp(com - com_ref) - Kd(dcom - dcom_ref) + ddcom_ref
+ dwb = - Kp* Mat2Ang(R * R_ref') - Kd(wb - wb_ref) + dwb_ref 
  
  Since ddcom_ref = dwb_ref = 0 as the reference state is a static equilibrium state, I did not add them in the calculations below*/
 
 accelerations.ddcom = - config.Kp * (robots.robot().com() - x_ref.CoM.pos) - config.Kd * (robots.robot().comVelocity() - x_ref.CoM.vel);
 accelerations.dwb = - config.Kp * Mat2Ang(robots.robot().posW().rotation().transpose() * x_ref.CoM.R.transpose()) - config.Kd * (robots.robot().bodyVelW("base_link").angular() - x_ref.CoM.angvel);
  
-// Testing a CoM strategy inspired by Murooka's paper (2021)
+// Testing a CoM strategy inspired by Murooka's paper (2021). It didn't work so it's better to ignore it
 
 /* pc_1_w = fd.x.CoM.R * fd.x.rightFoot.pos + fd.x.CoM.pos - (x_ref.CoM.R * x_ref.rightFoot.pos + x_ref.CoM.pos);
 pc_2_w = fd.x.CoM.R * fd.x.leftFoot.pos + fd.x.CoM.pos - (x_ref.CoM.R * x_ref.leftFoot.pos + x_ref.CoM.pos);
@@ -590,7 +598,7 @@ gamma.block(1,0,1,1) = 1/xsi * (pc_1_w.block(2,0,1,1) * f_delta_.block(1,0,1,1) 
 
 error.block(0,0,3,1) = error.block(0,0,3,1) - gamma; */
 
-// Calculating the accelerations in the base frame
+// Calculating the accelerations in the CoM/base frame
 
 ub = - K * error;
 
@@ -600,7 +608,7 @@ oc_dd_1 << ub(3), ub(4), ub(5);
 pc_dd_2 << ub(6), ub(7), ub(8);
 oc_dd_2 << ub(9), ub(10), ub(11);
 
-/* Transforming the accelerations from the base frame to the world frame, using:
+/* Transforming the accelerations from the CoM/base frame to the world frame, using:
 
   pc_dd = Rb*pc_dd_b - S^2(wb)*(pc-com) + S(dwb)*(pc - com) + 2S(wb)(pc_d-dcom) + ddcom;
   oc_dd = Rb*oc_dd_b + S(wb)*(oc_d - wb) + dwb; */

@@ -17,7 +17,7 @@ struct Stabilizer {
 
 protected:
 
-    // Defining a 36-element vector, to group the state error and force error
+    // Defining a 36-element vector, to represent different error vectors
 
     typedef Matrix <double,36,1> error;
 
@@ -60,7 +60,8 @@ protected:
 
     };
 
-    // This struct groups the current state and other variables from the feedback of the Robot
+    // This struct groups the current state and other variables from the feedback of the Robot. The state has variables written in the CoM/Base frames,
+    // while the additional variables in the feedback struct are written in the world frame.
 
     struct feedback{
 
@@ -97,6 +98,10 @@ protected:
     Matrix<double, 36, 36> M;
 
     };
+
+/*  This struct contains the configuration of the stabilizer. It has the weight variables for the Q, R, and W matrices, 
+    the stiffness and damping of the contacts, the mass and inertia of the robot, the PD gains for the CoM and Base tasks, gains for the admittance gain,
+    and some constants */
 
     struct configuration {
 
@@ -154,18 +159,17 @@ protected:
         Matrix3d Kp, Kd;
         Matrix3d Kf, Kt;
 
-
         double dt = 0.005;
 
     };
 
 public:
 
-    // Constructor to set the robots, realRobots and the robotIndex of the stabilizer as the ones of the controller
+    // Constructor to set the robots, realRobots and the robotIndex of the stabilizer as the ones of the controller. However it's an empty constructor.
 
     Stabilizer(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots, unsigned int robotIndex);
 
-    /**
+    /** This function formulates the LQR gain computation method from the linearized Matrices (Discrete, Infinite Horizon computation)
      * @brief Computes the LQR gain matrix (usually denoted K)
      * @param A State matrix of the underlying system
      * @param B Input matrix of the underlying system
@@ -189,11 +193,6 @@ public:
 
     Vector3d Mat2Ang(Matrix3d M);
 
-    /** This structure contains the stabilizer's configuration: constant values, the robot's mass  
-     * and Inertia, the stiffness/damping matrices of the contacts and of the com/base accelerations, and the 
-     * Weight matrices for the LQR and for the kinematics/force tradeoff 
-    */
-
     // This function sets the stabilizer's configuration defined in the struct configuration
 
     configuration configure (mc_rbdyn::Robots &robots);
@@ -207,15 +206,15 @@ public:
     state reference(mc_rbdyn::Robots &robots);
 
     // Get the current feedback: the state needed for the stabilizer, and the variables needed to transform the
-    // accelerations of the contacts from the base frame to the world frame
+    // accelerations of the contacts from the CoM/base frame to the world frame
 
     feedback getFeedback(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots);
 
-    // This function computes the LQR gain from the linearized Matrices
+    // This function computes the linearized Matrices needed for the LQR gain computation
 
     linearMatrix computeMatrix(state &x_ref, configuration &config);
 
-    // This function computes the LQR gain from the linearized Matrices
+    // This function computes the LQR gain from the linearized Matrices using the "lqrgain" function defined above 
 
     MatrixXd computeGain(linearMatrix &linearMatrix, configuration &config);
 
@@ -271,7 +270,7 @@ private:
     Matrix<double, 12, 12> F0, F1, F2, D1, D2, T1, T2, V1, V2;
     Matrix<double, 12, 6> G1, G2;
 
-    // Definition of Parameters to simplify the computation's expressions
+    // Definition of Parameters to simplify the computation's expressions (to simplify the writing of the code)
 
     double m;
     Matrix3d I;

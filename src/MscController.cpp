@@ -18,6 +18,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex()));
 
+  // Setting the anchor frame for the Kinematic Inertial estimator
+
   double leftFootRatio = 0.5;
   datastore().make_call("KinematicAnchorFrame::" + robot().name(),
                           [this, &leftFootRatio](const mc_rbdyn::Robot & robot)
@@ -32,6 +34,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   dof << 0, 0, 0, 0, 0, 0;
   dof_full << 1, 1, 1, 1, 1, 1;
+
+  // Setting Logger Entries
 
   com_ = com_.Zero();
   theta_ = theta_.Zero();
@@ -87,6 +91,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 bool MscController::run()
 {
 
+    // GUI related code for the Compute Button 
+
     if(init && !compute) {
 
       gui()->removeElement({"Stabilizer","Initialization"}, "Initialize");
@@ -108,6 +114,8 @@ bool MscController::run()
     compute = true;
 
     }
+
+    // GUI related code after clicking Compute
 
     if (ref && !main) {
 
@@ -158,6 +166,8 @@ bool MscController::run()
 
     main = true;
   }
+
+  // GUI related code when the tasks aren't loaded into the QP via the enable button
 
   if(!stabilizer && !flip && ref) {
     
@@ -306,6 +316,8 @@ bool MscController::run()
   flip = true;
    }
 
+  // GUI related code when the tasks are loaded into the QP via the enable button
+
   else if (stabilizer && flip && ref) {
 
   gui()->removeElement({"Stabilizer","Main"}, "Enable");
@@ -333,6 +345,9 @@ bool MscController::run()
 
   flip = false;
   }
+
+
+  // Code that is running all the time during the simulation after clicking the compute button
 
   if (ref) {
     stab_->feedback_ = stab_->getFeedback(robots(), realRobots());
@@ -368,7 +383,9 @@ bool MscController::run()
     tLF_ = stab_->f_delta_.block(9,0,3,1);
 
 
-    //mc_rtc::log::info("Test: \n{}\n", realRobots().robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose());
+// The commented section below are some filler log tests 
+
+//mc_rtc::log::info("Test: \n{}\n", realRobots().robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose());
 
 /*  mc_rtc::log::info("Reference: \n{}\n", stab_->x_ref_.CoM.pos);
     mc_rtc::log::info("Reference: \n{}\n", stab_->x_ref_.rightFoot.pos);
@@ -393,6 +410,8 @@ bool MscController::run()
   return mc_control::fsm::Controller::run();
 }
 
+// Reset function for the mc_rtc controller
+
 void MscController::reset(const mc_control::ControllerResetData & reset_data)
 {
   mc_control::fsm::Controller::reset(reset_data);
@@ -413,6 +432,8 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
     mc_rtc::log::info("Pipeline \"{}\" for real robot observation loaded!", observerPipelineName_);
   }
 
+  // GUI related code for the Initialize button. In this branch, it does nothing and should be removed
+
   if (!init) {
     gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Initialize", [this]() {
 
@@ -431,6 +452,8 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
 
    }));
   }
+
+// Plot related code in RViz
 
   using Color = mc_rtc::gui::Color;
   gui()->addPlot(
