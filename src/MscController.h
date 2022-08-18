@@ -36,7 +36,6 @@ private:
 
     bool stabilizer = false;
     bool flip = false;
-    bool init = false;
     bool main = false;
     bool ref = false;
     bool compute = false;

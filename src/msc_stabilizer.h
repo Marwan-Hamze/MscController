@@ -61,12 +61,13 @@ protected:
     };
 
     // This struct groups the current state and other variables from the feedback of the Robot. The state has variables written in the CoM/Base frames,
-    // while the additional variables in the feedback struct are written in the world frame.
+    // while the additional variables in the feedback struct (CoM, Rc_1 and Rc_2) are written in the world frame using the virtual robot.
 
     struct feedback{
 
     state x;
-    Matrix3d R, Rc_1, Rc_2;
+    COM CoM;
+    Matrix3d Rc_1, Rc_2;
     Vector3d pc_1 , pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2;
 
     };
@@ -126,17 +127,17 @@ protected:
 
         Vector3d qcom_p {10000, 10000, 10000};
         Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {30000, 30000, 30000};
+        Vector3d qcom_vel {3000, 3000, 3000};
         Vector3d qcom_angvel {1, 1, 1};
 
-        Vector3d qRF_p {100, 100, 100};
+        Vector3d qRF_p {1000, 1000, 1000};
         Vector3d qRF_R {1, 1, 1};
-        Vector3d qRF_vel {10, 10, 10};
+        Vector3d qRF_vel {100, 100, 100};
         Vector3d qRF_angvel {1, 1, 1};
 
-        Vector3d qLF_p {100, 100, 100};
+        Vector3d qLF_p {1000, 1000, 1000};
         Vector3d qLF_R {1, 1, 1};
-        Vector3d qLF_vel {10, 10, 10};
+        Vector3d qLF_vel {100, 100, 100};
         Vector3d qLF_angvel {1, 1, 1};
 
         Vector3d rRF_lacc {1, 1, 1};
@@ -224,7 +225,7 @@ public:
 
     // This function generates the accelerations written in the world frame for the contact tasks
 
-    accelerations computeAccelerations(const MatrixXd &K, feedback &feedback, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots);
+    accelerations computeAccelerations(const MatrixXd &K, feedback &feedback, state &x_ref, configuration &config, error &error);
 
     // Variables to compute and check while running the controller
 

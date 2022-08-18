@@ -93,10 +93,8 @@ bool MscController::run()
 
     // GUI related code for the Compute Button 
 
-    if(init && !compute) {
+    if(!compute) {
 
-      gui()->removeElement({"Stabilizer","Initialization"}, "Initialize");
-      gui()->removeCategory({"Stabilizer","FSM"});
       gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Compute", [this]() {
       
       stab_->config_ = stab_->configure(robots());
@@ -189,30 +187,6 @@ bool MscController::run()
     mc_rtc::log::success("Msc Stabilizer Enabled");
     }));
     
-
-  gui()->addElement({"Stabilizer", "Stop"}, mc_rtc::gui::Button("Stop", [this](){
-
-    ref = false;
-
-    gui()->removeCategory({"Stabilizer","Main"});
-    gui()->removeCategory({"Stabilizer","Tuning Q"});
-    gui()->removeCategory({"Stabilizer","Tuning R"});
-    gui()->removeCategory({"Stabilizer","Tuning W"});
-
-    removeContact({robot().name(), "ground", "RightFoot", "AllGround"});
-    removeContact({robot().name(), "ground", "LeftFoot", "AllGround"});
-
-    addContact({robot().name(), "ground", "RightFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof_full});
-    addContact({robot().name(), "ground", "LeftFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof_full});
-
-    solver().removeConstraintSet(kinematicsConstraint);
-    solver().addConstraintSet(dynamicsConstraint);
-
-    mc_rtc::log::info("Now the Right Hand can be moved back\n");
-
-    gui()->removeCategory({"Stabilizer","Stop"});
-
-  }));
 
   // Confirue Q GUI
 
@@ -352,7 +326,7 @@ bool MscController::run()
   if (ref) {
     stab_->feedback_ = stab_->getFeedback(robots(), realRobots());
     stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->linearMatrix_, stab_->config_);
-    stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, realRobots());
+    stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_);
 
     comTask_->refAccel(stab_->accelerations_.ddcom);
     baseTask_->refAccel(stab_->accelerations_.dwb);
@@ -430,27 +404,6 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   if(observerp.success())
   {
     mc_rtc::log::info("Pipeline \"{}\" for real robot observation loaded!", observerPipelineName_);
-  }
-
-  // GUI related code for the Initialize button. In this branch, it does nothing and should be removed
-
-  if (!init) {
-    gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Initialize", [this]() {
-
-/*       solver().removeConstraintSet(dynamicsConstraint);
-      solver().addConstraintSet(kinematicsConstraint);
-
-      removeContact({robot().name(), "ground", "RightFoot", "AllGround"});
-      removeContact({robot().name(), "ground", "LeftFoot", "AllGround"});
-
-      addContact({robot().name(), "ground", "RightFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof});
-      addContact({robot().name(), "ground", "LeftFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof}); */
-
-      mc_rtc::log::info("Feet Contacts are now free to move\n");
-
-      init = true;
-
-   }));
   }
 
 // Plot related code in RViz

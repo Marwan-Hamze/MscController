@@ -8,7 +8,7 @@ void RemoveHand::configure(const mc_rtc::Configuration & config)
 
 void RemoveHand::start(mc_control::fsm::Controller & ctl_)
 {
-    ctl_.gui()->addElement({"Stabilizer","FSM"}, mc_rtc::gui::Button("Remove Right Hand", [this]() { start_ = true; }));
+    // ctl_.gui()->addElement({"Stabilizer","FSM"}, mc_rtc::gui::Button("Remove Right Hand", [this]() { start_ = true; }));
 
 }
 
@@ -24,7 +24,7 @@ bool RemoveHand::run(mc_control::fsm::Controller & ctl_)
 
 void RemoveHand::teardown(mc_control::fsm::Controller & ctl_)
 {
-    ctl_.gui()->removeElement({"Stabilizer","FSM"},"Remove Right Hand");
+   // ctl_.gui()->removeElement({"Stabilizer","FSM"},"Remove Right Hand");
 }
 
 EXPORT_SINGLE_STATE("RemoveHand", RemoveHand)

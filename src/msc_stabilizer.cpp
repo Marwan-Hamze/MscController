@@ -261,7 +261,15 @@ Stabilizer::feedback Stabilizer::getFeedback(mc_rbdyn::Robots &robots, mc_rbdyn:
 
 feedback feedback;
 
-feedback.R = realRobots.robot().posW().rotation().transpose();
+Matrix3d Rc_1_real, Rc_2_real;
+
+Rc_1_real = realRobots.robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose();
+Rc_2_real = realRobots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
+
+feedback.CoM.pos = robots.robot().com();
+feedback.CoM.R = robots.robot().posW().rotation().transpose();
+feedback.CoM.vel = robots.robot().comVelocity();    
+feedback.CoM.angvel = robots.robot().bodyVelW("base_link").angular();
 
 feedback.pc_1 = robots.robot().bodyPosW("R_ANKLE_R_LINK").translation();
 feedback.Rc_1 = robots.robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose();
@@ -280,21 +288,21 @@ feedback.x.CoM.angvel = realRobots.robot().bodyVelW("base_link").angular();
 
 /* feedback.x.rightFoot.pos = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").translation();
 feedback.x.rightFoot.R = robots.robot().X_b1_b2("base_link","R_ANKLE_R_LINK").rotation().transpose(); */
-feedback.x.rightFoot.pos = feedback.R.transpose() * (feedback.pc_1 - feedback.x.CoM.pos);
-feedback.x.rightFoot.R = feedback.R.transpose() * feedback.Rc_1;
-feedback.x.rightFoot.vel = feedback.R.transpose() * (feedback.pc_d_1 - feedback.x.CoM.vel - S(feedback.x.CoM.angvel) * (feedback.pc_1 - feedback.x.CoM.pos));
-feedback.x.rightFoot.angvel = feedback.R.transpose() * (feedback.oc_d_1 - feedback.x.CoM.angvel);
-feedback.x.rightFoot.fc = feedback.Rc_1 * realRobots.robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots.robot()).force();
-feedback.x.rightFoot.tc = feedback.Rc_1 * realRobots.robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots.robot()).moment();
+feedback.x.rightFoot.pos = feedback.CoM.R.transpose() * (feedback.pc_1 - feedback.CoM.pos);
+feedback.x.rightFoot.R = feedback.CoM.R.transpose() * feedback.Rc_1;
+feedback.x.rightFoot.vel = feedback.CoM.R.transpose() * (feedback.pc_d_1 - feedback.CoM.vel - S(feedback.CoM.angvel) * (feedback.pc_1 - feedback.CoM.pos));
+feedback.x.rightFoot.angvel = feedback.CoM.R.transpose() * (feedback.oc_d_1 - feedback.CoM.angvel);
+feedback.x.rightFoot.fc = Rc_1_real * realRobots.robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots.robot()).force();
+feedback.x.rightFoot.tc = Rc_1_real * realRobots.robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots.robot()).moment();
 
 /* feedback.x.leftFoot.pos = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").translation();
 feedback.x.leftFoot.R = robots.robot().X_b1_b2("base_link","L_ANKLE_R_LINK").rotation().transpose(); */
-feedback.x.leftFoot.pos = feedback.R.transpose() * (feedback.pc_2 - feedback.x.CoM.pos);
-feedback.x.leftFoot.R = feedback.R.transpose() * feedback.Rc_2;
-feedback.x.leftFoot.vel = feedback.R.transpose() * (feedback.pc_d_2 - feedback.x.CoM.vel - S(feedback.x.CoM.angvel) * (feedback.pc_2 - feedback.x.CoM.pos));
-feedback.x.leftFoot.angvel = feedback.R.transpose() * (feedback.oc_d_2 - feedback.x.CoM.angvel);
-feedback.x.leftFoot.fc = feedback.Rc_2 * realRobots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots.robot()).force();
-feedback.x.leftFoot.tc = feedback.Rc_2 * realRobots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots.robot()).moment();
+feedback.x.leftFoot.pos = feedback.CoM.R.transpose() * (feedback.pc_2 - feedback.CoM.pos);
+feedback.x.leftFoot.R = feedback.CoM.R.transpose() * feedback.Rc_2;
+feedback.x.leftFoot.vel = feedback.CoM.R.transpose() * (feedback.pc_d_2 - feedback.CoM.vel - S(feedback.CoM.angvel) * (feedback.pc_2 - feedback.CoM.pos));
+feedback.x.leftFoot.angvel = feedback.CoM.R.transpose() * (feedback.oc_d_2 - feedback.CoM.angvel);
+feedback.x.leftFoot.fc = Rc_2_real * realRobots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots.robot()).force();
+feedback.x.leftFoot.tc = Rc_2_real * realRobots.robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots.robot()).moment();
 
 
 return feedback;
@@ -538,19 +546,19 @@ x_delta_.block(27,0,3,1) = Mat2Ang(feedback.x.leftFoot.R * x_ref.leftFoot.R.tran
 x_delta_.block(30,0,3,1) = feedback.x.leftFoot.vel - x_ref.leftFoot.vel;
 x_delta_.block(33,0,3,1) = feedback.x.leftFoot.angvel - x_ref.leftFoot.angvel;
 
-z_delta_.block(12,0,3,1) = - feedback.R.transpose() * config.KFP_RF.inverse() * (feedback.x.rightFoot.fc - x_ref.rightFoot.fc);
-z_delta_.block(15,0,3,1) = - feedback.R.transpose() * config.KTP_RF.inverse() * (feedback.x.rightFoot.tc - x_ref.rightFoot.tc);
+z_delta_.block(12,0,3,1) = - feedback.x.CoM.R.transpose() * config.KFP_RF.inverse() * f_delta_.block(0,0,3,1);
+z_delta_.block(15,0,3,1) = - feedback.x.CoM.R.transpose() * config.KTP_RF.inverse() * f_delta_.block(3,0,3,1);
 
-z_delta_.block(24,0,3,1) = - feedback.R.transpose() * config.KFP_LF.inverse() * (feedback.x.leftFoot.fc - x_ref.leftFoot.fc);
-z_delta_.block(27,0,3,1) = - feedback.R.transpose() * config.KTP_LF.inverse() * (feedback.x.leftFoot.tc - x_ref.leftFoot.tc);
+z_delta_.block(24,0,3,1) = - feedback.x.CoM.R.transpose() * config.KFP_LF.inverse() * f_delta_.block(6,0,3,1);
+z_delta_.block(27,0,3,1) = - feedback.x.CoM.R.transpose() * config.KTP_LF.inverse() * f_delta_.block(9,0,3,1);
 
 // Admittance gains
 
-v_delta_.block(18,0,3,1) =  config.Kf * feedback.R.transpose() * (f_delta_.block(0,0,3,1) - (- config.KFP_RF * feedback.R * linearMatrix.M.block(12,0,3,36) * x_delta_));
-v_delta_.block(21,0,3,1) =  config.Kt * feedback.R.transpose() * (f_delta_.block(3,0,3,1) - (- config.KTP_RF * feedback.R * linearMatrix.M.block(15,0,3,36) * x_delta_));
+v_delta_.block(18,0,3,1) =  config.Kf * feedback.x.CoM.R.transpose() * (f_delta_.block(0,0,3,1) - (- config.KFP_RF * feedback.x.CoM.R * linearMatrix.M.block(12,0,3,36) * x_delta_));
+v_delta_.block(21,0,3,1) =  config.Kt * feedback.x.CoM.R.transpose() * (f_delta_.block(3,0,3,1) - (- config.KTP_RF * feedback.x.CoM.R * linearMatrix.M.block(15,0,3,36) * x_delta_));
 
-v_delta_.block(30,0,3,1) =  config.Kf * feedback.R.transpose() * (f_delta_.block(6,0,3,1) - (- config.KFP_LF * feedback.R * linearMatrix.M.block(24,0,3,36) * x_delta_));
-v_delta_.block(33,0,3,1) =  config.Kt * feedback.R.transpose() * (f_delta_.block(9,0,3,1) - (- config.KTP_LF * feedback.R * linearMatrix.M.block(27,0,3,36) * x_delta_));
+v_delta_.block(30,0,3,1) =  config.Kf * feedback.x.CoM.R.transpose() * (f_delta_.block(6,0,3,1) - (- config.KFP_LF * feedback.x.CoM.R * linearMatrix.M.block(24,0,3,36) * x_delta_));
+v_delta_.block(33,0,3,1) =  config.Kt * feedback.x.CoM.R.transpose() * (f_delta_.block(9,0,3,1) - (- config.KTP_LF * feedback.x.CoM.R * linearMatrix.M.block(27,0,3,36) * x_delta_));
 
 error = (config.Id36 - config.W) * x_delta_ + config.W * z_delta_ + v_delta_;
 
@@ -560,7 +568,7 @@ return error;
 
 // Accelerations calculations
 
-Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd &K, feedback &fd, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots){
+Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd &K, feedback &fd, state &x_ref, configuration &config, error &error){
 
 accelerations accelerations;
 
@@ -579,8 +587,8 @@ gamma = gamma.Zero();
  
  Since ddcom_ref = dwb_ref = 0 as the reference state is a static equilibrium state, I did not add them in the calculations below*/
 
-accelerations.ddcom = - config.Kp * (robots.robot().com() - x_ref.CoM.pos) - config.Kd * (robots.robot().comVelocity() - x_ref.CoM.vel);
-accelerations.dwb = - config.Kp * Mat2Ang(robots.robot().posW().rotation().transpose() * x_ref.CoM.R.transpose()) - config.Kd * (robots.robot().bodyVelW("base_link").angular() - x_ref.CoM.angvel);
+accelerations.ddcom = - config.Kp * (fd.x.CoM.pos - x_ref.CoM.pos) - config.Kd * (fd.x.CoM.vel - x_ref.CoM.vel);
+accelerations.dwb = - config.Kp * Mat2Ang(fd.x.CoM.R  * x_ref.CoM.R.transpose()) - config.Kd * (fd.x.CoM.angvel - x_ref.CoM.angvel);
  
 // Testing a CoM strategy inspired by Murooka's paper (2021). It didn't work so it's better to ignore it
 
@@ -613,12 +621,12 @@ oc_dd_2 << ub(9), ub(10), ub(11);
   pc_dd = Rb*pc_dd_b - S^2(wb)*(pc-com) + S(dwb)*(pc - com) + 2S(wb)(pc_d-dcom) + ddcom;
   oc_dd = Rb*oc_dd_b + S(wb)*(oc_d - wb) + dwb; */
 
-u.block(0,0,3,1) = fd.R * pc_dd_1 - S(fd.x.CoM.angvel) * S(fd.x.CoM.angvel) * (fd.pc_1 - fd.x.CoM.pos) + S(accelerations.dwb) * (fd.pc_1 - fd.x.CoM.pos)
-+ 2 * S(fd.x.CoM.angvel) * (fd.pc_d_1 - fd.x.CoM.vel) + accelerations.ddcom;
-u.block(3,0,3,1) = fd.R * oc_dd_1 + S(fd.x.CoM.angvel) * (fd.oc_d_1 - fd.x.CoM.angvel) + accelerations.dwb;
-u.block(6,0,3,1) = fd.R * pc_dd_2 - S(fd.x.CoM.angvel) * S(fd.x.CoM.angvel) * (fd.pc_2 - fd.x.CoM.pos) + S(accelerations.dwb) * (fd.pc_2 - fd.x.CoM.pos)
-+ 2 * S(fd.x.CoM.angvel) * (fd.pc_d_2 - fd.x.CoM.vel) + accelerations.ddcom;
-u.block(9,0,3,1) = fd.R * oc_dd_2 + S(fd.x.CoM.angvel) * (fd.oc_d_2 - fd.x.CoM.angvel) + accelerations.dwb;
+u.block(0,0,3,1) = fd.CoM.R * pc_dd_1 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_1 - fd.CoM.pos) + S(accelerations.dwb) * (fd.pc_1 - fd.CoM.pos)
++ 2 * S(fd.CoM.angvel) * (fd.pc_d_1 - fd.CoM.vel) + accelerations.ddcom;
+u.block(3,0,3,1) = fd.CoM.R * oc_dd_1 + S(fd.CoM.angvel) * (fd.oc_d_1 - fd.CoM.angvel) + accelerations.dwb;
+u.block(6,0,3,1) = fd.CoM.R * pc_dd_2 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_2 - fd.CoM.pos) + S(accelerations.dwb) * (fd.pc_2 - fd.CoM.pos)
++ 2 * S(fd.CoM.angvel) * (fd.pc_d_2 - fd.CoM.vel) + accelerations.ddcom;
+u.block(9,0,3,1) = fd.CoM.R* oc_dd_2 + S(fd.CoM.angvel) * (fd.oc_d_2 - fd.CoM.angvel) + accelerations.dwb;
 
 accelerations.RF_linAcc = u.block(0,0,3,1);
 accelerations.RF_angAcc = u.block(3,0,3,1);
