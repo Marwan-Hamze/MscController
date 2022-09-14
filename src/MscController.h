@@ -39,12 +39,17 @@ private:
     bool main = false;
     bool ref = false;
     bool compute = false;
-    
-    // The 6d vectors below are used to free or fix the contacts to the ground. They have no effect in this branch, their use is in the multi-contact situation
-    Eigen::Vector6d dof, dof_full;
 
     // Vectors to add error signals to the logs
     Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
+   
+
+    // Accelerations by Finite Differences to check the accelerations. Defining vectors for the old velocities and for the accelerations
+
+    Vector3d la_RF_, aa_RF_, la_RF_w, aa_RF_w;
+    Vector3d comdd_, omd_;
+
+    // Tasks and Stabilizer Pointers
 
     std::shared_ptr<msc_stabilizer::Stabilizer> stab_;
 

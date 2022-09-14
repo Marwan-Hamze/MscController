@@ -5,16 +5,14 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 {
   config_.load(config);
   
-  //solver().addConstraintSet(dynamicsConstraint);
+  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e11);
+  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 1e11);
 
-  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 10);
-  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 10);
+  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
+  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
 
-  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
-  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
-
-  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
-  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
+  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
+  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
 
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex()));
 
@@ -31,9 +29,6 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
 
   mc_rtc::log::success("MscController initialization from Constructor done ");
-
-  dof << 0, 0, 0, 0, 0, 0;
-  dof_full << 1, 1, 1, 1, 1, 1;
 
   // Setting Logger Entries
 
@@ -55,6 +50,14 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   omLF_ = omLF_.Zero();
   fLF_ = fLF_.Zero();
   tLF_ = tLF_.Zero();
+
+  la_RF_ = la_RF_.Zero();
+  aa_RF_ = aa_RF_.Zero(); 
+  la_RF_w = la_RF_w.Zero();
+  aa_RF_w = aa_RF_w.Zero();
+
+  comdd_ = comdd_.Zero();
+  omd_ = omd_.Zero();
 
   logger().addLogEntry("Error_com_Position", [this]() { return com_; });
   logger().addLogEntry("Error_com_Orientation", [this]() { return theta_; });
@@ -79,6 +82,12 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("Accelerations_RightFoot_Angular", [this]() { return stab_->accelerations_.RF_angAcc;});
   logger().addLogEntry("Accelerations_LeftFoot_Linear", [this]() { return stab_->accelerations_.LF_linAcc;});
   logger().addLogEntry("Accelerations_LeftFoot_Angular", [this]() { return stab_->accelerations_.LF_angAcc;});
+  logger().addLogEntry("Accelerations_CoM", [this]() { return stab_->accelerations_.ddcom;});
+  logger().addLogEntry("Accelerations_Base", [this]() { return stab_->accelerations_.dwb;});
+  logger().addLogEntry("Accelerations_CoM_FD", [this]() { return comdd_;});
+  logger().addLogEntry("Accelerations_Base_FD", [this]() { return omd_;});
+  logger().addLogEntry("Accelerations_RightFoot_Linear_FD", [this]() { return la_RF_w;});
+  logger().addLogEntry("Accelerations_RightFoot_Angular_FD", [this]() { return aa_RF_w;});
 
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
   logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
@@ -129,6 +138,19 @@ bool MscController::run()
 
       mc_rtc::log::info("LeftFoot Linear Acceleration = \n{}\n" , stab_->accelerations_.LF_linAcc);
       mc_rtc::log::info("LeftFoot Angular Acceleration = \n{}\n" , stab_->accelerations_.LF_angAcc);
+
+      }));
+
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check Jacobians", [this]() {
+
+      mc_rtc::log::info("CoM Task Jacobian = \n{}\n" , comTask_->jac());
+      mc_rtc::log::info("Base Task Jacobian = \n{}\n" , baseTask_->jac());
+    
+      mc_rtc::log::info("RightFoot Position Task Jacobian = \n{}\n" , rightFoot_PosTask_->jac());
+      mc_rtc::log::info("RightFoot Orientation Task Jacobian = \n{}\n" , rightFoot_OrTask_->jac());
+
+      mc_rtc::log::info("LeftFoot Position Task Jacobian = \n{}\n" , leftFoot_PosTask_->jac());
+      mc_rtc::log::info("LeftFoot Orientation Task Jacobian = \n{}\n" , leftFoot_OrTask_->jac());
 
       }));
 
@@ -326,7 +348,7 @@ bool MscController::run()
   if (ref) {
     stab_->feedback_ = stab_->getFeedback(robots(), realRobots());
     stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->linearMatrix_, stab_->config_);
-    stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_);
+    stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, robots());
 
     comTask_->refAccel(stab_->accelerations_.ddcom);
     baseTask_->refAccel(stab_->accelerations_.dwb);
@@ -356,7 +378,16 @@ bool MscController::run()
     fLF_ = stab_->f_delta_.block(6,0,3,1);
     tLF_ = stab_->f_delta_.block(9,0,3,1);
 
+    la_RF_w = stab_->finiteDifferences(stab_->feedback_.pc_d_1);
+    aa_RF_w = stab_->finiteDifferencesAng(stab_->feedback_.oc_d_1); 
 
+    comdd_ = stab_->finiteDifferencesCoM(stab_->feedback_.CoM.vel);
+    omd_ = stab_->finiteDifferencesBase(stab_->feedback_.CoM.angvel);
+
+/*     la_RF_w = stab_->feedback_.CoM.R * la_RF_ - stab_->S(stab_->feedback_.CoM.angvel) * stab_->S(stab_->feedback_.CoM.angvel) * (stab_->feedback_.pc_1 - stab_->feedback_.CoM.pos) + stab_->S(omd_) * (stab_->feedback_.pc_1 - stab_->feedback_.CoM.pos)
+              + 2 * stab_->S(stab_->feedback_.CoM.angvel) * (stab_->feedback_.pc_d_1 - stab_->feedback_.CoM.vel) + comdd_;
+    aa_RF_w = stab_->feedback_.CoM.R * aa_RF_ + stab_->S(stab_->feedback_.CoM.angvel) * (stab_->feedback_.oc_d_1 - stab_->feedback_.CoM.angvel) + omd_;
+ */
 // The commented section below are some filler log tests 
 
 //mc_rtc::log::info("Test: \n{}\n", realRobots().robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose());

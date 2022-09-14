@@ -26,15 +26,15 @@ robots:
       translation: [7.4, 0.0, 7.8]
       rotation: [0.0, -0.80, 0.0]
 # General constraints, always on
-constraints:
-- type: contact
-- type: kinematics
-  damper: [0.1, 0.01, 0.5]
-- type: compoundJoint
+#constraints:
+#- type: contact
+#- type: kinematics
+#  damper: [0.1, 0.01, 0.5]
+#- type: compoundJoint
 # Collision constraint
-collisions:
-- type: collision
-  useMinimal: true
+#collisions:
+#- type: collision
+#  useMinimal: true
 #- type: collision
 #  r1: hrp4
 #  r2: tilted_board
@@ -63,10 +63,10 @@ contacts:
 hrp4:
   posture:
     stiffness: 1
-    weight: 100
-  #ff:
-    #stiffness: 2
-    #weight: 100
+    weight: 10
+#  ff:
+#    stiffness: 2
+#    weight: 10
 
 
 # Transitions map

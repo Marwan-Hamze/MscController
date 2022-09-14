@@ -125,19 +125,19 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {10000, 10000, 10000};
+        Vector3d qcom_p {100, 100, 100};
         Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {3000, 3000, 3000};
+        Vector3d qcom_vel {30, 30, 30};
         Vector3d qcom_angvel {1, 1, 1};
 
-        Vector3d qRF_p {1000, 1000, 1000};
+        Vector3d qRF_p {1e6, 1e6, 1e6};
         Vector3d qRF_R {1, 1, 1};
-        Vector3d qRF_vel {100, 100, 100};
+        Vector3d qRF_vel {3e3, 3e3, 3e3};
         Vector3d qRF_angvel {1, 1, 1};
 
-        Vector3d qLF_p {1000, 1000, 1000};
+        Vector3d qLF_p {1e6, 1e6, 1e6};
         Vector3d qLF_R {1, 1, 1};
-        Vector3d qLF_vel {100, 100, 100};
+        Vector3d qLF_vel {3e3, 3e3, 3e3};
         Vector3d qLF_angvel {1, 1, 1};
 
         Vector3d rRF_lacc {1, 1, 1};
@@ -145,9 +145,9 @@ protected:
         Vector3d rLF_lacc {1, 1, 1};
         Vector3d rLF_aacc {1, 1, 1};
 
-        Vector3d wf_RF {0, 0, 0.95};
+        Vector3d wf_RF {0.95, 0.95, 0.95};
         Vector3d wt_RF {0.95, 0.95, 0.95};
-        Vector3d wf_LF {0, 0, 0.95};
+        Vector3d wf_LF {0.95, 0.95, 0.95};
         Vector3d wt_LF {0.95, 0.95, 0.95};
 
         Matrix3d KFP_RF, KFP_LF;
@@ -187,7 +187,7 @@ public:
 
     // This function computes the skew symmetric matrix of a given 3D vector
 
-    inline Matrix3d S(Vector3d v);
+    Matrix3d S(Vector3d v);
 
     // This function transforms a rotation matrix to a 3d Vector
     // The transformation is based on the matrix/ axis-angle transformation
@@ -225,13 +225,25 @@ public:
 
     // This function generates the accelerations written in the world frame for the contact tasks
 
-    accelerations computeAccelerations(const MatrixXd &K, feedback &feedback, state &x_ref, configuration &config, error &error);
+    accelerations computeAccelerations(const MatrixXd &K, feedback &feedback, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots);
+
+    // Finite Differences Methods
+    
+    Vector3d finiteDifferences(Vector3d &vel, double dt = 0.005);
+
+    Vector3d finiteDifferencesAng(Vector3d &angvel, double dt = 0.005);
+
+    Vector3d finiteDifferencesCoM(Vector3d &vel, double dt = 0.005);
+
+    Vector3d finiteDifferencesBase(Vector3d &angvel, double dt = 0.005);
 
     // Variables to compute and check while running the controller
 
     MatrixXd K_;
 
     state x_ref_;
+
+    Vector3d pc_dd_1, oc_dd_1, pc_dd_2, oc_dd_2;    
 
     feedback feedback_;
 
@@ -247,6 +259,13 @@ public:
     accelerations accelerations_;
 
     linearMatrix linearMatrix_;
+
+    // Old velocities for the Finite Difference Method
+
+    Vector3d v_old_ = v_old_.Zero();
+    Vector3d w_old_ = w_old_.Zero();
+    Vector3d v_com_old_ = v_com_old_.Zero();
+    Vector3d w_base_old_ = w_base_old_.Zero();
 
 private:
 

@@ -106,6 +106,51 @@ else
 
 }
 
+Vector3d Stabilizer::finiteDifferences(Vector3d &vel, double dt){
+
+Vector3d acc;
+
+acc = (vel - v_old_)/dt;
+v_old_ = vel;
+
+return acc;
+
+}
+
+Vector3d Stabilizer::finiteDifferencesAng(Vector3d &angvel, double dt){
+
+Vector3d acc;
+
+acc = (angvel - w_old_)/dt;
+w_old_ = angvel;
+
+return acc;
+
+}
+
+Vector3d Stabilizer::finiteDifferencesCoM(Vector3d &vel, double dt){
+
+Vector3d acc;
+
+acc = (vel - v_com_old_)/dt;
+v_com_old_ = vel;
+
+return acc;
+
+}
+
+Vector3d Stabilizer::finiteDifferencesBase(Vector3d &angvel, double dt){
+
+Vector3d acc;
+
+acc = (angvel - w_base_old_)/dt;
+w_base_old_ = angvel;
+
+return acc;
+
+}
+
+
 // configuring the stabilizer
 
 Stabilizer::configuration Stabilizer::configure(mc_rbdyn::Robots &robots){
@@ -164,8 +209,8 @@ config.KTD_LF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
 
-config.Kp << 50, 0, 0, 0, 50, 0, 0, 0, 50;
-config.Kd << 10, 0, 0, 0, 10, 0, 0, 0, 10;
+config.Kp << 30000, 0, 0, 0, 30000, 0, 0, 0, 30000;
+config.Kd << 300, 0, 0, 0, 300, 0, 0, 0, 300;
 
 config.Kf << 0, 0, 0, 0, 0, 0, 0, 0, 0;
 config.Kt << 0, 0, 0, 0, 0, 0, 0, 0, 0;
@@ -568,16 +613,16 @@ return error;
 
 // Accelerations calculations
 
-Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd &K, feedback &fd, state &x_ref, configuration &config, error &error){
+Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd &K, feedback &fd, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots){
 
 accelerations accelerations;
 
 Stabilizer::command u, ub;
-Vector3d pc_dd_1, oc_dd_1, pc_dd_2, oc_dd_2;
 Vector3d gamma, pc_1_w, pc_2_w;
 double xsi;
 
 u = u.Zero();
+ub = ub.Zero();
 gamma = gamma.Zero();
 
 /*  Generating com and base accelerations, using:
@@ -587,8 +632,8 @@ gamma = gamma.Zero();
  
  Since ddcom_ref = dwb_ref = 0 as the reference state is a static equilibrium state, I did not add them in the calculations below*/
 
-accelerations.ddcom = - config.Kp * (fd.x.CoM.pos - x_ref.CoM.pos) - config.Kd * (fd.x.CoM.vel - x_ref.CoM.vel);
-accelerations.dwb = - config.Kp * Mat2Ang(fd.x.CoM.R  * x_ref.CoM.R.transpose()) - config.Kd * (fd.x.CoM.angvel - x_ref.CoM.angvel);
+accelerations.ddcom = - config.Kp * (fd.CoM.pos - x_ref.CoM.pos) - config.Kd * (fd.CoM.vel - x_ref.CoM.vel);
+accelerations.dwb = - config.Kp * Mat2Ang(fd.CoM.R  * x_ref.CoM.R.transpose()) - config.Kd * (fd.CoM.angvel - x_ref.CoM.angvel);
  
 // Testing a CoM strategy inspired by Murooka's paper (2021). It didn't work so it's better to ignore it
 
@@ -621,12 +666,12 @@ oc_dd_2 << ub(9), ub(10), ub(11);
   pc_dd = Rb*pc_dd_b - S^2(wb)*(pc-com) + S(dwb)*(pc - com) + 2S(wb)(pc_d-dcom) + ddcom;
   oc_dd = Rb*oc_dd_b + S(wb)*(oc_d - wb) + dwb; */
 
-u.block(0,0,3,1) = fd.CoM.R * pc_dd_1 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_1 - fd.CoM.pos) + S(accelerations.dwb) * (fd.pc_1 - fd.CoM.pos)
-+ 2 * S(fd.CoM.angvel) * (fd.pc_d_1 - fd.CoM.vel) + accelerations.ddcom;
-u.block(3,0,3,1) = fd.CoM.R * oc_dd_1 + S(fd.CoM.angvel) * (fd.oc_d_1 - fd.CoM.angvel) + accelerations.dwb;
-u.block(6,0,3,1) = fd.CoM.R * pc_dd_2 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_2 - fd.CoM.pos) + S(accelerations.dwb) * (fd.pc_2 - fd.CoM.pos)
-+ 2 * S(fd.CoM.angvel) * (fd.pc_d_2 - fd.CoM.vel) + accelerations.ddcom;
-u.block(9,0,3,1) = fd.CoM.R* oc_dd_2 + S(fd.CoM.angvel) * (fd.oc_d_2 - fd.CoM.angvel) + accelerations.dwb;
+u.block(0,0,3,1) = fd.CoM.R * pc_dd_1 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_1 - fd.CoM.pos) + S(robots.robot().accW().angular()) * (fd.pc_1 - fd.CoM.pos)
++ 2 * S(fd.CoM.angvel) * (fd.pc_d_1 - fd.CoM.vel) + robots.robot().comAcceleration();
+u.block(3,0,3,1) = fd.CoM.R * oc_dd_1 + S(fd.CoM.angvel) * (fd.oc_d_1 - fd.CoM.angvel) + robots.robot().accW().angular();
+u.block(6,0,3,1) = fd.CoM.R * pc_dd_2 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_2 - fd.CoM.pos) + S(robots.robot().accW().angular()) * (fd.pc_2 - fd.CoM.pos)
++ 2 * S(fd.CoM.angvel) * (fd.pc_d_2 - fd.CoM.vel) + robots.robot().comAcceleration();
+u.block(9,0,3,1) = fd.CoM.R* oc_dd_2 + S(fd.CoM.angvel) * (fd.oc_d_2 - fd.CoM.angvel) + robots.robot().accW().angular();
 
 accelerations.RF_linAcc = u.block(0,0,3,1);
 accelerations.RF_angAcc = u.block(3,0,3,1);
