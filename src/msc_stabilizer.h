@@ -125,9 +125,9 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {10000, 10000, 10000};
+        Vector3d qcom_p {10000, 10000, 10000}; // 1000
         Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {300, 300, 300};
+        Vector3d qcom_vel {300, 300, 300}; // 300
         Vector3d qcom_angvel {1, 1, 1};
 
         Vector3d qRF_p {1e6, 1e6, 1e6};
@@ -229,13 +229,13 @@ public:
 
     // Finite Differences Methods
     
-    Vector3d finiteDifferences(Vector3d &vel, double dt = 0.005);
+    Vector3d finiteDifferences(Vector3d &vel, Vector3d &vel_old, double dt = 0.005);
 
-    Vector3d finiteDifferencesAng(Vector3d &angvel, double dt = 0.005);
+/*     Vector3d finiteDifferencesAng(Vector3d &angvel, double dt = 0.005);
 
     Vector3d finiteDifferencesCoM(Vector3d &vel, double dt = 0.005);
 
-    Vector3d finiteDifferencesBase(Vector3d &angvel, double dt = 0.005);
+    Vector3d finiteDifferencesBase(Vector3d &angvel, double dt = 0.005); */
 
     // Variables to compute and check while running the controller
 
@@ -260,15 +260,6 @@ public:
 
     linearMatrix linearMatrix_;
 
-    // Old velocities for the Finite Difference Method
-
-    Vector3d v_old_ = v_old_.Zero();
-    Vector3d w_old_ = w_old_.Zero();
-    Vector3d v_com_old_ = v_com_old_.Zero();
-    Vector3d w_base_old_ = w_base_old_.Zero();
-
-private:
-
     // Definition of the Modified Linear Matrices after the trade-off between the state and force errors
 
     Matrix<double, 36, 36> Ay;
@@ -276,6 +267,8 @@ private:
     Matrix<double, 36, 36> Qy;
 
     Matrix<double, 36, 36> N;
+
+private:
 
     // Definition of sub-Matrices to simplify the expression of the Control Matrices 
 

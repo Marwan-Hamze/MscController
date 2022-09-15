@@ -39,15 +39,21 @@ private:
     bool main = false;
     bool ref = false;
     bool compute = false;
-
-    // Vectors to add error signals to the logs
-    Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
    
 
-    // Accelerations by Finite Differences to check the accelerations. Defining vectors for the old velocities and for the accelerations
+    // Accelerations by Finite Differences to check the accelerations.
 
-    Vector3d la_RF_, aa_RF_, la_RF_w, aa_RF_w;
-    Vector3d comdd_, omd_;
+    Vector3d RF_linear_acc, RF_angular_acc, LF_linear_acc, LF_angular_acc;
+    Vector3d comdd_, omegad_;
+
+    // Old velocities for the Finite Difference Method
+
+    Vector3d v_RF_old_ = v_RF_old_.Zero();
+    Vector3d w_RF_old_ = w_RF_old_.Zero();
+    Vector3d v_LF_old_ = v_LF_old_.Zero();
+    Vector3d w_LF_old_ = w_LF_old_.Zero();
+    Vector3d v_com_old_ = v_com_old_.Zero();
+    Vector3d w_base_old_ = w_base_old_.Zero();
 
     // Tasks and Stabilizer Pointers
 

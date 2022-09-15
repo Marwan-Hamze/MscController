@@ -5,8 +5,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 {
   config_.load(config);
   
-  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e11);
-  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot ().robotIndex(), 0, 1e11);
+  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e7);
+  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot ().robotIndex(), 0, 1e7);
 
   rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
   rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
@@ -30,70 +30,31 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   mc_rtc::log::success("MscController initialization from Constructor done ");
 
-  // Setting Logger Entries
+  // Setting Logger Entries for the accelerations of the CoM, Base (angular), and Right Foot, all written in the world frame.
+  // "The desired" accelerations are sent to the QP, the "achieved" accelerations are the derivatives of the velocities 
+  // obtained from the control robot.
 
-  com_ = com_.Zero();
-  theta_ = theta_.Zero();
-  comd_ = comd_.Zero();
-  om_ = om_.Zero();
-
-  pRF_ = pRF_.Zero();
-  thetaRF_ = thetaRF_.Zero();
-  vRF_ = vRF_.Zero();
-  omRF_ = omRF_.Zero();
-  fRF_ = fRF_.Zero();
-  tRF_ = tRF_.Zero();
-
-  pLF_ = pLF_.Zero();
-  thetaLF_ = thetaLF_.Zero();
-  vLF_ = vLF_.Zero();
-  omLF_ = omLF_.Zero();
-  fLF_ = fLF_.Zero();
-  tLF_ = tLF_.Zero();
-
-  la_RF_ = la_RF_.Zero();
-  aa_RF_ = aa_RF_.Zero(); 
-  la_RF_w = la_RF_w.Zero();
-  aa_RF_w = aa_RF_w.Zero();
+  RF_linear_acc = RF_linear_acc.Zero();
+  RF_angular_acc = RF_angular_acc.Zero();
+  LF_linear_acc = LF_linear_acc.Zero();
+  LF_angular_acc = LF_angular_acc.Zero();
 
   comdd_ = comdd_.Zero();
-  omd_ = omd_.Zero();
+  omegad_ = omegad_.Zero();
 
-  logger().addLogEntry("Error_com_Position", [this]() { return com_; });
-  logger().addLogEntry("Error_com_Orientation", [this]() { return theta_; });
-  logger().addLogEntry("Error_com_Velocity", [this]() { return comd_; });
-  logger().addLogEntry("Error_com_AngVelocity", [this]() { return om_; });
+  logger().addLogEntry("Accelerations_CoM_Desired", [this]() { return stab_->accelerations_.ddcom;});
+  logger().addLogEntry("Accelerations_Base_Desired", [this]() { return stab_->accelerations_.dwb;});
+  logger().addLogEntry("Accelerations_RightFoot_Linear_Desired", [this]() { return stab_->accelerations_.RF_linAcc;});
+  logger().addLogEntry("Accelerations_RightFoot_Angular_Desired", [this]() { return stab_->accelerations_.RF_angAcc;});
+  logger().addLogEntry("Accelerations_LeftFoot_Linear_Desired", [this]() { return stab_->accelerations_.LF_linAcc;});
+  logger().addLogEntry("Accelerations_LeftFoot_Angular_Desired", [this]() { return stab_->accelerations_.LF_angAcc;});
 
-  logger().addLogEntry("Error_RightFoot_Position", [this]() { return pRF_; });
-  logger().addLogEntry("Error_RightFoot_Orientation", [this]() { return thetaRF_; });
-  logger().addLogEntry("Error_RightFoot_Velocity", [this]() { return vRF_; });
-  logger().addLogEntry("Error_RightFoot_AngVelocity", [this]() { return omRF_; });
-  logger().addLogEntry("Error_RightFoot_Force", [this]() { return fRF_; });
-  logger().addLogEntry("Error_RightFoot_Moment", [this]() { return tRF_; });
-
-  logger().addLogEntry("Error_LeftFoot_Position", [this]() { return pLF_; });
-  logger().addLogEntry("Error_LeftFoot_Orientation", [this]() { return thetaLF_; });
-  logger().addLogEntry("Error_LeftFoot_Velocity", [this]() { return vLF_; });
-  logger().addLogEntry("Error_LeftFoot_AngVelocity", [this]() { return omLF_; });
-  logger().addLogEntry("Error_LeftFoot_Force", [this]() { return fLF_; });
-  logger().addLogEntry("Error_LeftFoot_Moment", [this]() { return tLF_; });
-
-  logger().addLogEntry("Accelerations_RightFoot_Linear", [this]() { return stab_->accelerations_.RF_linAcc;});
-  logger().addLogEntry("Accelerations_RightFoot_Angular", [this]() { return stab_->accelerations_.RF_angAcc;});
-  logger().addLogEntry("Accelerations_LeftFoot_Linear", [this]() { return stab_->accelerations_.LF_linAcc;});
-  logger().addLogEntry("Accelerations_LeftFoot_Angular", [this]() { return stab_->accelerations_.LF_angAcc;});
-  logger().addLogEntry("Accelerations_CoM", [this]() { return stab_->accelerations_.ddcom;});
-  logger().addLogEntry("Accelerations_Base", [this]() { return stab_->accelerations_.dwb;});
-  logger().addLogEntry("Accelerations_CoM_FD", [this]() { return comdd_;});
-  logger().addLogEntry("Accelerations_Base_FD", [this]() { return omd_;});
-  logger().addLogEntry("Accelerations_RightFoot_Linear_FD", [this]() { return la_RF_w;});
-  logger().addLogEntry("Accelerations_RightFoot_Angular_FD", [this]() { return aa_RF_w;});
-
-  logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
-  logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
-
-  //logger().addLogEntry("RightHand_Force", [this]() {return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force();});
-  //logger().addLogEntry("RightHand_Moment", [this]() {return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).moment();});
+  logger().addLogEntry("Accelerations_CoM_Achieved", [this]() { return comdd_;});
+  logger().addLogEntry("Accelerations_Base_Achieved", [this]() { return omegad_;});
+  logger().addLogEntry("Accelerations_RightFoot_Linear_Achieved", [this]() { return RF_linear_acc;});
+  logger().addLogEntry("Accelerations_RightFoot_Angular_Achieved", [this]() { return RF_angular_acc;});
+  logger().addLogEntry("Accelerations_LeftFoot_Linear_Achieved", [this]() { return LF_linear_acc;});
+  logger().addLogEntry("Accelerations_LeftFoot_Angular_Achieved", [this]() { return LF_angular_acc;});
 
 }
 
@@ -181,6 +142,12 @@ bool MscController::run()
     gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The LQR Gain", [this]() {
       
       mc_rtc::log::info("LQR Gain K = \n{}\n" , stab_->K_);
+
+      }));
+
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check A-BK", [this]() {
+      
+      mc_rtc::log::info("Matrix A-BK = \n{}\n" , stab_->Ay - stab_->By * stab_->K_);
 
       }));
 
@@ -346,9 +313,13 @@ bool MscController::run()
   // Code that is running all the time during the simulation after clicking the compute button
 
   if (ref) {
+
+    // Here the accelerations are calculated
     stab_->feedback_ = stab_->getFeedback(robots(), realRobots());
     stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->linearMatrix_, stab_->config_);
     stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_);
+
+    // Here the accelerations are loaded as reference accelerations for the respective tasks
 
     comTask_->refAccel(stab_->accelerations_.ddcom);
     baseTask_->refAccel(stab_->accelerations_.dwb);
@@ -359,54 +330,16 @@ bool MscController::run()
     leftFoot_PosTask_->refAccel(stab_->accelerations_.LF_linAcc);
     leftFoot_OrTask_->refAccel(stab_->accelerations_.LF_angAcc);
 
-    com_ = stab_->x_delta_.block(0,0,3,1);
-    theta_ = stab_->x_delta_.block(3,0,3,1);
-    comd_ = stab_->x_delta_.block(6,0,3,1);
-    om_ = stab_->x_delta_.block(9,0,3,1);
+    // Here I use Finite Differences on velocities from the control Robot's feedback to check the achieved accelerations
 
-    pRF_ = stab_->x_delta_.block(12,0,3,1);
-    thetaRF_ = stab_->x_delta_.block(15,0,3,1);
-    vRF_ = stab_->x_delta_.block(18,0,3,1);
-    omRF_ = stab_->x_delta_.block(21,0,3,1);
-    fRF_ = stab_->f_delta_.block(0,0,3,1);
-    tRF_ = stab_->f_delta_.block(3,0,3,1);
+    RF_linear_acc = stab_->finiteDifferences(stab_->feedback_.pc_d_1, v_RF_old_);
+    RF_angular_acc = stab_->finiteDifferences(stab_->feedback_.oc_d_1, w_RF_old_); 
+    
+    LF_linear_acc = stab_->finiteDifferences(stab_->feedback_.pc_d_2, v_LF_old_);
+    LF_angular_acc = stab_->finiteDifferences(stab_->feedback_.oc_d_2, w_LF_old_); 
 
-    pLF_ = stab_->x_delta_.block(24,0,3,1);
-    thetaLF_ = stab_->x_delta_.block(27,0,3,1);
-    vLF_ = stab_->x_delta_.block(30,0,3,1);
-    omLF_ = stab_->x_delta_.block(33,0,3,1);
-    fLF_ = stab_->f_delta_.block(6,0,3,1);
-    tLF_ = stab_->f_delta_.block(9,0,3,1);
-
-    la_RF_w = stab_->finiteDifferences(stab_->feedback_.pc_d_1);
-    aa_RF_w = stab_->finiteDifferencesAng(stab_->feedback_.oc_d_1); 
-
-    comdd_ = stab_->finiteDifferencesCoM(stab_->feedback_.CoM.vel);
-    omd_ = stab_->finiteDifferencesBase(stab_->feedback_.CoM.angvel);
-
-/*     la_RF_w = stab_->feedback_.CoM.R * la_RF_ - stab_->S(stab_->feedback_.CoM.angvel) * stab_->S(stab_->feedback_.CoM.angvel) * (stab_->feedback_.pc_1 - stab_->feedback_.CoM.pos) + stab_->S(omd_) * (stab_->feedback_.pc_1 - stab_->feedback_.CoM.pos)
-              + 2 * stab_->S(stab_->feedback_.CoM.angvel) * (stab_->feedback_.pc_d_1 - stab_->feedback_.CoM.vel) + comdd_;
-    aa_RF_w = stab_->feedback_.CoM.R * aa_RF_ + stab_->S(stab_->feedback_.CoM.angvel) * (stab_->feedback_.oc_d_1 - stab_->feedback_.CoM.angvel) + omd_;
- */
-// The commented section below are some filler log tests 
-
-//mc_rtc::log::info("Test: \n{}\n", realRobots().robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose());
-
-/*  mc_rtc::log::info("Reference: \n{}\n", stab_->x_ref_.CoM.pos);
-    mc_rtc::log::info("Reference: \n{}\n", stab_->x_ref_.rightFoot.pos);
-    mc_rtc::log::info("Reference: \n{}\n", stab_->x_ref_.rightFoot.R); */
-
-/*    mc_rtc::log::info("Base rot: \n{}\n", realRobots().robot().posW().rotation().transpose());
-   mc_rtc::log::info("Base pos: \n{}\n", realRobots().robot().posW().translation()); */
-
-   //mc_rtc::log::info("Force Right Hand: \n{}\n", realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(robots().robot()).force());
-
-    //mc_rtc::log::info("Transformation Surface-Ankle Rotation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().rotation().transpose());
-    //mc_rtc::log::info("Transformation Surface-Ankle Left - Translation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().translation());
-    //mc_rtc::log::info("Transformation Surface-Ankle Right - Translation: \n{}\n", realRobots().robot().surface("RightFoot").X_b_s().translation());
-
-    /* mc_rtc::log::info("From Ankle: \n{}\n", realRobots().robot().bodyWrench("L_ANKLE_R").moment());
-    mc_rtc::log::info("From Surface: \n{}\n", realRobots().robot().surfaceWrench("LeftFoot").moment()); */
+    comdd_ = stab_->finiteDifferences(stab_->feedback_.CoM.vel, v_com_old_);
+    omegad_ = stab_->finiteDifferences(stab_->feedback_.CoM.angvel, w_base_old_);
 
   }
 
