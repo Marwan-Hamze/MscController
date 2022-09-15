@@ -209,8 +209,8 @@ config.KTD_LF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
 
-config.Kp << 30000, 0, 0, 0, 30000, 0, 0, 0, 30000;
-config.Kd << 300, 0, 0, 0, 300, 0, 0, 0, 300;
+config.Kp << 100, 0, 0, 0, 100, 0, 0, 0, 100;
+config.Kd << 30, 0, 0, 0, 30, 0, 0, 0, 30;
 
 config.Kf << 0, 0, 0, 0, 0, 0, 0, 0, 0;
 config.Kt << 0, 0, 0, 0, 0, 0, 0, 0, 0;
@@ -613,7 +613,7 @@ return error;
 
 // Accelerations calculations
 
-Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd &K, feedback &fd, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots){
+Stabilizer::accelerations Stabilizer::computeAccelerations(const MatrixXd &K, feedback &fd, state &x_ref, configuration &config, error &error){
 
 accelerations accelerations;
 
@@ -666,12 +666,12 @@ oc_dd_2 << ub(9), ub(10), ub(11);
   pc_dd = Rb*pc_dd_b - S^2(wb)*(pc-com) + S(dwb)*(pc - com) + 2S(wb)(pc_d-dcom) + ddcom;
   oc_dd = Rb*oc_dd_b + S(wb)*(oc_d - wb) + dwb; */
 
-u.block(0,0,3,1) = fd.CoM.R * pc_dd_1 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_1 - fd.CoM.pos) + S(robots.robot().accW().angular()) * (fd.pc_1 - fd.CoM.pos)
-+ 2 * S(fd.CoM.angvel) * (fd.pc_d_1 - fd.CoM.vel) + robots.robot().comAcceleration();
-u.block(3,0,3,1) = fd.CoM.R * oc_dd_1 + S(fd.CoM.angvel) * (fd.oc_d_1 - fd.CoM.angvel) + robots.robot().accW().angular();
-u.block(6,0,3,1) = fd.CoM.R * pc_dd_2 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_2 - fd.CoM.pos) + S(robots.robot().accW().angular()) * (fd.pc_2 - fd.CoM.pos)
-+ 2 * S(fd.CoM.angvel) * (fd.pc_d_2 - fd.CoM.vel) + robots.robot().comAcceleration();
-u.block(9,0,3,1) = fd.CoM.R* oc_dd_2 + S(fd.CoM.angvel) * (fd.oc_d_2 - fd.CoM.angvel) + robots.robot().accW().angular();
+u.block(0,0,3,1) = fd.CoM.R * pc_dd_1 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_1 - fd.CoM.pos) + S(accelerations.dwb) * (fd.pc_1 - fd.CoM.pos)
++ 2 * S(fd.CoM.angvel) * (fd.pc_d_1 - fd.CoM.vel) + accelerations.ddcom;
+u.block(3,0,3,1) = fd.CoM.R * oc_dd_1 + S(fd.CoM.angvel) * (fd.oc_d_1 - fd.CoM.angvel) + accelerations.dwb;
+u.block(6,0,3,1) = fd.CoM.R * pc_dd_2 - S(fd.CoM.angvel) * S(fd.CoM.angvel) * (fd.pc_2 - fd.CoM.pos) + S(accelerations.dwb) * (fd.pc_2 - fd.CoM.pos)
++ 2 * S(fd.CoM.angvel) * (fd.pc_d_2 - fd.CoM.vel) + accelerations.ddcom;
+u.block(9,0,3,1) = fd.CoM.R* oc_dd_2 + S(fd.CoM.angvel) * (fd.oc_d_2 - fd.CoM.angvel) + accelerations.dwb;
 
 accelerations.RF_linAcc = u.block(0,0,3,1);
 accelerations.RF_angAcc = u.block(3,0,3,1);

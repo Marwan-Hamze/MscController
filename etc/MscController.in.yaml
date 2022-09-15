@@ -63,7 +63,7 @@ contacts:
 hrp4:
   posture:
     stiffness: 1
-    weight: 10
+    weight: 1
 #  ff:
 #    stiffness: 2
 #    weight: 10

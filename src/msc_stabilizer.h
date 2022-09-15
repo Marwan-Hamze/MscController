@@ -125,9 +125,9 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {100, 100, 100};
+        Vector3d qcom_p {10000, 10000, 10000};
         Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {30, 30, 30};
+        Vector3d qcom_vel {300, 300, 300};
         Vector3d qcom_angvel {1, 1, 1};
 
         Vector3d qRF_p {1e6, 1e6, 1e6};
@@ -225,7 +225,7 @@ public:
 
     // This function generates the accelerations written in the world frame for the contact tasks
 
-    accelerations computeAccelerations(const MatrixXd &K, feedback &feedback, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots);
+    accelerations computeAccelerations(const MatrixXd &K, feedback &feedback, state &x_ref, configuration &config, error &error);
 
     // Finite Differences Methods
     

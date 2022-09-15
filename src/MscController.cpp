@@ -6,7 +6,7 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   config_.load(config);
   
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e11);
-  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 1e11);
+  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot ().robotIndex(), 0, 1e11);
 
   rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
   rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
@@ -348,7 +348,7 @@ bool MscController::run()
   if (ref) {
     stab_->feedback_ = stab_->getFeedback(robots(), realRobots());
     stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->linearMatrix_, stab_->config_);
-    stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, robots());
+    stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_);
 
     comTask_->refAccel(stab_->accelerations_.ddcom);
     baseTask_->refAccel(stab_->accelerations_.dwb);
