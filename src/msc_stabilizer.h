@@ -231,12 +231,6 @@ public:
     
     Vector3d finiteDifferences(Vector3d &vel, Vector3d &vel_old, double dt = 0.005);
 
-/*     Vector3d finiteDifferencesAng(Vector3d &angvel, double dt = 0.005);
-
-    Vector3d finiteDifferencesCoM(Vector3d &vel, double dt = 0.005);
-
-    Vector3d finiteDifferencesBase(Vector3d &angvel, double dt = 0.005); */
-
     // Variables to compute and check while running the controller
 
     MatrixXd K_;

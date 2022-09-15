@@ -117,39 +117,6 @@ return acc;
 
 }
 
-/* Vector3d Stabilizer::finiteDifferencesAng(Vector3d &angvel, double dt){
-
-Vector3d acc;
-
-acc = (angvel - w_old_)/dt;
-w_old_ = angvel;
-
-return acc;
-
-}
-
-Vector3d Stabilizer::finiteDifferencesCoM(Vector3d &vel, double dt){
-
-Vector3d acc;
-
-acc = (vel - v_com_old_)/dt;
-v_com_old_ = vel;
-
-return acc;
-
-}
-
-Vector3d Stabilizer::finiteDifferencesBase(Vector3d &angvel, double dt){
-
-Vector3d acc;
-
-acc = (angvel - w_base_old_)/dt;
-w_base_old_ = angvel;
-
-return acc;
-
-} */
-
 
 // configuring the stabilizer
 
