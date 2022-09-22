@@ -162,17 +162,17 @@ config.W.block(15,15,3,3).diagonal() = config.wt_RF;
 config.W.block(24,24,3,3).diagonal() = config.wf_LF;
 config.W.block(27,27,3,3).diagonal() = config.wt_LF;
 
-config.KFP_RF << 30000, 0, 0, 0, 30000, 0, 0, 0, 30000;
-config.KFD_RF << 100, 0, 0, 0, 100, 0, 0, 0, 100;
-config.KTP_RF << 400, 0, 0, 0, 400, 0, 0, 0, 400;
-config.KTD_RF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
+config.KFP_RF << 100000, 0, 0, 0, 100000, 0, 0, 0, 100000;
+config.KFD_RF << 400, 0, 0, 0, 400, 0, 0, 0, 400;
+config.KTP_RF << 5000, 0, 0, 0, 5000, 0, 0, 0, 5000;
+config.KTD_RF << 30, 0, 0, 0, 30, 0, 0, 0, 30;
 
 config.Rsc_RF = robots.robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose();
 
-config.KFP_LF << 30000, 0, 0, 0, 30000, 0, 0, 0, 30000;
-config.KFD_LF << 100, 0, 0, 0, 100, 0, 0, 0, 100;
-config.KTP_LF << 400, 0, 0, 0, 400, 0, 0, 0, 400;
-config.KTD_LF << 5, 0, 0, 0, 5, 0, 0, 0, 5;
+config.KFP_LF << 100000, 0, 0, 0, 100000, 0, 0, 0, 100000;
+config.KFD_LF << 400, 0, 0, 0, 400, 0, 0, 0, 400;
+config.KTP_LF << 1000, 0, 0, 0, 1000, 0, 0, 0, 1000;
+config.KTD_LF << 30, 0, 0, 0, 30, 0, 0, 0, 30;
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
 

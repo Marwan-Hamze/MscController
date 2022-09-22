@@ -40,6 +40,9 @@ private:
     bool ref = false;
     bool compute = false;
    
+   // Vectors to add error signals to the logs
+   
+    Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
 
     // Accelerations by Finite Differences to check the accelerations.
 

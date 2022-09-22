@@ -26,24 +26,24 @@ robots:
       translation: [7.4, 0.0, 7.8]
       rotation: [0.0, -0.80, 0.0]
 # General constraints, always on
-#constraints:
-#- type: contact
-#- type: kinematics
-#  damper: [0.1, 0.01, 0.5]
-#- type: compoundJoint
+constraints:
+- type: contact
+- type: kinematics
+  damper: [0.1, 0.01, 0.5]
+- type: compoundJoint
 # Collision constraint
-#collisions:
-#- type: collision
-#  useMinimal: true
-#- type: collision
-#  r1: hrp4
-#  r2: tilted_board
-#  collisions:
-#    - body1: L_WRIST_Y_LINK
-#      body2: ground
-#      iDist: 0.5
-#      sDist: 0.02
-#      damping: 0.0
+collisions:
+- type: collision
+  useMinimal: true
+- type: collision
+  r1: hrp4
+  r2: tilted_board
+  collisions:
+    - body1: L_WRIST_Y_LINK
+      body2: ground
+      iDist: 0.5
+      sDist: 0.02
+      damping: 0.0
 # Initial set of contacts
 contacts:
 - r1: hrp4

@@ -125,20 +125,20 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {10000, 10000, 10000}; // 1000
-        Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {300, 300, 300}; // 300
-        Vector3d qcom_angvel {1, 1, 1};
+        Vector3d qcom_p {3e10, 3e10, 3e10};
+        Vector3d qcom_R {1e9, 1e9, 1e9};
+        Vector3d qcom_vel {3e8, 3e8, 3e8};
+        Vector3d qcom_angvel {3e6, 3e6, 3e6};
 
-        Vector3d qRF_p {1e6, 1e6, 1e6};
-        Vector3d qRF_R {1, 1, 1};
-        Vector3d qRF_vel {3e3, 3e3, 3e3};
-        Vector3d qRF_angvel {1, 1, 1};
+        Vector3d qRF_p {3e11, 3e11, 3e11};
+        Vector3d qRF_R {3e7, 3e7, 3e7};
+        Vector3d qRF_vel {1e9, 1e9, 1e9};
+        Vector3d qRF_angvel {3e8, 3e8, 3e8};
 
-        Vector3d qLF_p {1e6, 1e6, 1e6};
-        Vector3d qLF_R {1, 1, 1};
-        Vector3d qLF_vel {3e3, 3e3, 3e3};
-        Vector3d qLF_angvel {1, 1, 1};
+        Vector3d qLF_p {3e11, 3e11, 3e11};
+        Vector3d qLF_R {3e7, 3e7, 3e7};
+        Vector3d qLF_vel {1e9, 1e9, 1e9};
+        Vector3d qLF_angvel {3e8, 3e8, 3e8};
 
         Vector3d rRF_lacc {1, 1, 1};
         Vector3d rRF_aacc {1, 1, 1};
