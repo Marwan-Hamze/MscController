@@ -162,17 +162,17 @@ config.W.block(15,15,3,3).diagonal() = config.wt_RF;
 config.W.block(24,24,3,3).diagonal() = config.wf_LF;
 config.W.block(27,27,3,3).diagonal() = config.wt_LF;
 
-config.KFP_RF << 2.5e4, 0, 0, 0, 2.5e4, 0, 0, 0, 2.5e4;
-config.KFD_RF << 300, 0, 0, 0, 300, 0, 0, 0, 300;
-config.KTP_RF << 500, 0, 0, 0, 500, 0, 0, 0, 500;
-config.KTD_RF << 1, 0, 0, 0, 1, 0, 0, 0, 1;
+config.KFP_RF << 2.5e4, 0, 0, 0, 2.5e4, 0, 0, 0, 2.5e4; //For rigid floor: 1e5 on the diagonal
+config.KFD_RF << 300, 0, 0, 0, 300, 0, 0, 0, 300; //For rigid floor: 400 on the diagonal
+config.KTP_RF << 500, 0, 0, 0, 500, 0, 0, 0, 500; //For rigid floor: 5000 on the diagonal
+config.KTD_RF << 1, 0, 0, 0, 1, 0, 0, 0, 1; //For rigid floor: 30 on the diagonal
 
 config.Rsc_RF = robots.robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose();
 
-config.KFP_LF << 2.5e4, 0, 0, 0, 2.5e4, 0, 0, 0, 2.5e4;
-config.KFD_LF << 300, 0, 0, 0, 300, 0, 0, 0, 300;
-config.KTP_LF << 500, 0, 0, 0, 800, 0, 0, 0, 500;
-config.KTD_LF << 1, 0, 0, 0, 1, 0, 0, 0, 1;
+config.KFP_LF << 2.5e4, 0, 0, 0, 2.5e4, 0, 0, 0, 2.5e4; //For rigid floor: 1e5 on the diagonal
+config.KFD_LF << 300, 0, 0, 0, 300, 0, 0, 0, 300; //For rigid floor: 400 on the diagonal
+config.KTP_LF << 500, 0, 0, 0, 800, 0, 0, 0, 500; //For rigid floor: 5000 on the diagonal
+config.KTD_LF << 1, 0, 0, 0, 1, 0, 0, 0, 1; //For rigid floor: 30 on the diagonal
 
 config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
 
