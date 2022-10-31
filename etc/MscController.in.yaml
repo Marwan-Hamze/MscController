@@ -63,20 +63,20 @@ contacts:
 hrp4:
   posture:
     stiffness: 1
-    weight: 100
+    weight: 1
   #ff:
     #stiffness: 2
     #weight: 100
 
 # Implement some additional text states
 states:
-  # Keep the CoM centered between the feet, and the chest upright
+  # Keep the CoM centered between the feet, and the chest and base upright
   StandingBase:
     base: MetaTasks
     tasks:
       CoM:
         type: com
-        above: [LeftFoot, RightFoot]
+        above: [LeftFoot, RightFoot]      
         weight: 2000
         stiffness: 5
       KeepTorso:
@@ -90,7 +90,21 @@ states:
         weight: 1000
         stiffness: 1
   
-  # Trajectory to bring hand close to the wall
+  #Move the CoM to the front
+  MoveCoM:
+    base: MetaTasks
+    tasks:
+      CoM:
+        type: com
+        above: [LeftFoot, RightFoot]
+        move_com: [0.04, 0, 0]        
+        weight: 2000
+        stiffness: 5
+#        duration: 4.0
+#        completion:
+#          eval: 0.001
+  
+  # Trajectory to bring the right hand close to the table
   RightHandToWall:
     base: StandingBase
     tasks:
@@ -100,7 +114,7 @@ states:
         surface: RightHand
         weight: 1000
         stiffness: 50
-        duration: 4.0
+        duration: 5.0
         dimWeight: [1, 1, 1, 1, 0.5, 0.5]
         displaySamples: 100
         target:
@@ -111,8 +125,12 @@ states:
         completion:
           timeElapsed: true
 
+# Right Hand reaching the table and making contact
   RightHand::ContactWithConstantVel:
-    base: MetaTasks
+    base: MoveCoM
+#    config:
+#      CoM:
+#        move_com: [0.05, 0, 0] 
     # Only allow motion along hand's z axis
     AddContacts:
       - r1: hrp4
@@ -124,14 +142,14 @@ states:
       RightHandContactConstantVelocity:
         type: surfaceTransform
         surface: RightHand
-        refVel: [0,0,0,0,0,-0.05]
+        refVel: [0,0,0,0,0,-0.03]
         stiffness: 1
         damping: 300
         weight: 800
         completion:
           wrench:
-            couple: [0, 0, 0]
-            force: [0, 0, 10]
+            couple: [.NaN, .NaN, .NaN]
+            force: [.NaN, .NaN, 20.0]
   
   RightHand::Contact:
     base: StandingBase
@@ -158,7 +176,7 @@ states:
        damping: 50
        weight: 500
        moveWorld:
-         translation: [-0.3, -0.1, -0.1]
+         translation: [-0.1, -0.1, -0.1]
        completion:
          OR:
            - eval: 0.05
@@ -179,9 +197,14 @@ states:
     states: [StandingBase, HalfSitting]
     configs:
       HalfSitting:
+        weight: 100
         stiffness: 5
         completion:
-          eval: 0.01
+         OR:
+           - eval: 0.001
+           - AND:
+               - timeout: 3.0
+               - speed: 0.01
 
 
 # Transitions map
@@ -190,21 +213,24 @@ transitions:
 - [RightHandToWall,                              OK, RightHand::ContactWithConstantVel, Auto]
 - [RightHand::ContactWithConstantVel,            OK, RightHand::Contact, Auto]
 - [RightHand::Contact,                           OK, RemoveHand, Auto]
+#- [RightHand::Contact,                           OK, MoveCoM, Auto]
+#- [MoveCoM,                                      OK, RemoveHand, Auto]
 - [RemoveHand,                                   OK, RightHand::Remove, Auto]
 - [RightHand::Remove,                            OK, StandingHalfSitting, Auto]
 
 # Initial state
 init: MscController_Initial
-#Observer
+#Observer Pipelines
 ObserverPipelines:
   name: "MscControllerObserverPipeline"
   gui: true
   observers:
     - type: Encoder
-      update: true
     - type: Attitude
-      update: true
+      required: false
+    - type: KinematicInertial
+      config:
+        anchorFrame:
+          maxAnchorFrameDiscontinuity: 0.02
     - type: BodySensor
       update: false
-      config:
-        bodySensor: FloatingBase

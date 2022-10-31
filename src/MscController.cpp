@@ -7,24 +7,39 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   
   solver().addConstraintSet(kinematicsConstraint);
 
-  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 10);
-  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 10);
+  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e7);
+  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 1e7);
 
-  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
-  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
+  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
 
-  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
-  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 250);
+  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
+  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
 
-  rightHand_PosTask_ = std::make_shared<mc_tasks::PositionTask>("r_wrist", robots(), robots().robot().robotIndex(), 0, 250);
-  rightHand_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("r_wrist", robots(), robots().robot().robotIndex(), 0, 250);
+  rightHand_PosTask_ = std::make_shared<mc_tasks::PositionTask>("r_wrist", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightHand_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("r_wrist", robots(), robots().robot().robotIndex(), 0, 1e9);
 
-  stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex()));
+  stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex())); 
+
+  // Setting the anchor frame for the Kinematic Inertial estimator
+
+  double leftFootRatio = 0.5;
+  datastore().make_call("KinematicAnchorFrame::" + robot().name(),
+                          [this, &leftFootRatio](const mc_rbdyn::Robot & robot)
+                          {
+                            return sva::interpolate(robot.surfacePose("LeftFoot"),
+                                                    robot.surfacePose("RightFoot"),
+                                                    leftFootRatio);
+                          });
 
   mc_rtc::log::success("MscController initialization from Constructor done ");
 
+  // These dof vectors are used to fix/free the contacts when adding/removing the right hand contact 
+
   dof << 0, 0, 0, 0, 0, 0;
   dof_full << 1, 1, 1, 1, 1, 1;
+
+  // Setting Logger Entries for error signals coming from the state variables of the LQR controller
 
   com_ = com_.Zero();
   theta_ = theta_.Zero();
@@ -78,12 +93,16 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("Error_RightHand_Force", [this]() { return fRH_; });
   logger().addLogEntry("Error_RightHand_Moment", [this]() { return tRH_; });
 
+  // Logging the desired accelerations in the world frame sent to the QP 
+
   logger().addLogEntry("Accelerations_RightFoot_Linear", [this]() { return stab_->accelerations_.RF_linAcc;});
   logger().addLogEntry("Accelerations_RightFoot_Angular", [this]() { return stab_->accelerations_.RF_angAcc;});
   logger().addLogEntry("Accelerations_LeftFoot_Linear", [this]() { return stab_->accelerations_.LF_linAcc;});
   logger().addLogEntry("Accelerations_LeftFoot_Angular", [this]() { return stab_->accelerations_.LF_angAcc;});
   logger().addLogEntry("Accelerations_RightHand_Linear", [this]() { return stab_->accelerations_.RH_linAcc;});
   logger().addLogEntry("Accelerations_RightHand_Angular", [this]() { return stab_->accelerations_.RH_angAcc;});
+
+  // Logging the Cop of each foot
 
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
   logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
@@ -92,6 +111,7 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
 bool MscController::run()
 {
+    // GUI related code for the Compute Button
 
     if(init && !compute) {
 
@@ -113,6 +133,8 @@ bool MscController::run()
     compute = true;
 
     }
+
+    // GUI related code after clicking Compute
 
     if (ref && !main) {
 
@@ -152,6 +174,14 @@ bool MscController::run()
 
       }));
 
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The A, B and M Matrices", [this]() {
+      
+      mc_rtc::log::info("A = \n{}\n" , stab_->linearMatrix_.A);
+      mc_rtc::log::info("B = \n{}\n" , stab_->linearMatrix_.B);
+      mc_rtc::log::info("M = \n{}\n" , stab_->linearMatrix_.M);
+
+      }));
+
     gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The LQR Gain", [this]() {
       
       mc_rtc::log::info("LQR Gain K = \n{}\n" , stab_->K_);
@@ -160,6 +190,8 @@ bool MscController::run()
 
     main = true;
   }
+
+  // GUI related code when the tasks aren't loaded into the QP via the enable button
 
   if(!stabilizer && !flip && ref) {
     
@@ -184,6 +216,7 @@ bool MscController::run()
     mc_rtc::log::success("Msc Stabilizer Enabled");
     }));
     
+  // GUI related code to the Stop button
 
   gui()->addElement({"Stabilizer", "Stop"}, mc_rtc::gui::Button("Stop", [this](){
 
@@ -200,8 +233,8 @@ bool MscController::run()
     addContact({robot().name(), "ground", "RightFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof_full});
     addContact({robot().name(), "ground", "LeftFoot", "AllGround", mc_rbdyn::Contact::defaultFriction, dof_full});
 
-    solver().removeConstraintSet(kinematicsConstraint);
-    solver().addConstraintSet(dynamicsConstraint);
+/*     solver().removeConstraintSet(kinematicsConstraint);
+    solver().addConstraintSet(dynamicsConstraint); */
 
     mc_rtc::log::info("Now the Right Hand can be moved back\n");
 
@@ -328,6 +361,8 @@ bool MscController::run()
   flip = true;
    }
 
+  // GUI related code when the tasks are loaded into the QP via the enable button
+
   else if (stabilizer && flip && ref) {
 
   gui()->removeElement({"Stabilizer","Main"}, "Enable");
@@ -359,10 +394,17 @@ bool MscController::run()
   flip = false;
   }
 
+  // Code that is running all the time during the simulation after clicking the compute button
+
   if (ref) {
+
+    // Here the accelerations are calculated
+
     stab_->feedback_ = stab_->getFeedback(robots(), realRobots());
     stab_->error_ = stab_->computeError(stab_->x_ref_, stab_->feedback_, stab_->config_);
-    stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_, realRobots());
+    stab_->accelerations_ = stab_->computeAccelerations(stab_->K_, stab_->feedback_, stab_->x_ref_, stab_->config_, stab_->error_);
+
+    // Here the accelerations are loaded as reference accelerations for the respective tasks
 
     comTask_->refAccel(stab_->accelerations_.ddcom);
     baseTask_->refAccel(stab_->accelerations_.dwb);
@@ -372,6 +414,11 @@ bool MscController::run()
     
     leftFoot_PosTask_->refAccel(stab_->accelerations_.LF_linAcc);
     leftFoot_OrTask_->refAccel(stab_->accelerations_.LF_angAcc);
+
+    rightHand_PosTask_->refAccel(stab_->accelerations_.RH_linAcc);
+    rightHand_OrTask_->refAccel(stab_->accelerations_.RH_angAcc);
+
+    // To log the error of the state vector and forces
 
     com_ = stab_->x_delta_.block(0,0,3,1);
     theta_ = stab_->x_delta_.block(3,0,3,1);
@@ -399,22 +446,14 @@ bool MscController::run()
     fRH_ = stab_->f_delta_.block(12,0,3,1);
     tRH_ = stab_->f_delta_.block(15,0,3,1);
 
-
-   //mc_rtc::log::info("Force Right Hand: \n{}\n", realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(robots().robot()).force());
-
-    //mc_rtc::log::info("Transformation Surface-Ankle Rotation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().rotation().transpose());
-    //mc_rtc::log::info("Transformation Surface-Ankle Left - Translation: \n{}\n", realRobots().robot().surface("LeftFoot").X_b_s().translation());
-    //mc_rtc::log::info("Transformation Surface-Ankle Right - Translation: \n{}\n", realRobots().robot().surface("RightFoot").X_b_s().translation());
-
-    /* mc_rtc::log::info("From Ankle: \n{}\n", realRobots().robot().bodyWrench("L_ANKLE_R").moment());
-    mc_rtc::log::info("From Surface: \n{}\n", realRobots().robot().surfaceWrench("LeftFoot").moment()); */
-
   }
 
    t_ += timeStep;
 
   return mc_control::fsm::Controller::run();
 }
+
+// Reset function for the mc_rtc controller
 
 void MscController::reset(const mc_control::ControllerResetData & reset_data)
 {
@@ -439,11 +478,13 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
     mc_rtc::log::info("Pipeline \"{}\" for real robot observation loaded!", observerPipelineName_);
   }
 
+  // GUI related code for the Initialize button
+
   if (!init) {
     gui()->addElement({"Stabilizer","Initialization"}, mc_rtc::gui::Button("Initialize", [this]() {
 
-      //solver().removeConstraintSet(dynamicsConstraint);
-      //solver().addConstraintSet(kinematicsConstraint);
+/*       solver().removeConstraintSet(dynamicsConstraint);
+      solver().addConstraintSet(kinematicsConstraint); */
 
       removeContact({robot().name(), "ground", "RightFoot", "AllGround"});
       removeContact({robot().name(), "ground", "LeftFoot", "AllGround"});
@@ -458,6 +499,8 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
    }));
   }
 
+  // Plot related code in RViz
+
   using Color = mc_rtc::gui::Color;
   gui()->addPlot(
       "Right Foot CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
@@ -470,8 +513,16 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
           "CoM(x)", [this]() { return realRobots().robot().com().x(); }, Color::Red));
 
   gui()->addPlot(
-      "Right Hand Force(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+      "Right Hand CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
-          "f_RH(z)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red));
+          "CoP(x)", [this]() { return realRobots().robot().cop("RightHand").x(); }, Color::Green));
 
+/*   gui()->addPlot(
+      "Right Hand Force (t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "f_RH(z)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red), 
+      mc_rtc::gui::plot::Y(
+          "f_RH(x)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green),
+      mc_rtc::gui::plot::Y(
+          "f_RH(y)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue)); */
 }

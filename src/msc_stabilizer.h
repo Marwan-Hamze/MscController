@@ -61,12 +61,14 @@ protected:
 
     };
 
-    // This struct groups the current state and other variables from the feedback of the Robot
+    // This struct groups the current state and other variables from the feedback of the Robot. The state has variables written in the CoM/Base frames,
+    // while the additional variables in the feedback struct (CoM, Rc_1 and Rc_2) are written in the world frame using the virtual robot.
 
     struct feedback{
 
     state x;
-    Matrix3d R, Rc_1, Rc_2, Rc_3;
+    COM CoM;
+    Matrix3d Rc_1, Rc_2, Rc_3;
     Vector3d pc_1 , pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2, pc_3, pc_d_3, oc_d_3;
 
     };
@@ -123,25 +125,25 @@ protected:
 
         Matrix<double, 48, 18> N_xu;
 
-        Vector3d qcom_p {30000000000000, 30000000000000, 30000000000000};
-        Vector3d qcom_R {1, 1, 1};
-        Vector3d qcom_vel {100000000, 100000000, 100000000};
-        Vector3d qcom_angvel {1, 1, 1};
+        Vector3d qcom_p {1e10, 1e10, 1e10}; 
+        Vector3d qcom_R {1e9, 1e9, 1e9}; 
+        Vector3d qcom_vel {1e10, 1e10, 1e10}; 
+        Vector3d qcom_angvel {1e9, 1e9, 1e9}; 
 
-        Vector3d qRF_p {10000000000000, 10000000000000, 10000000000000};
-        Vector3d qRF_R {1, 1, 1};
-        Vector3d qRF_vel {3000000000, 3000000000, 3000000000};
-        Vector3d qRF_angvel {1, 1, 1};
+        Vector3d qRF_p {1e10, 1e10, 1e10}; 
+        Vector3d qRF_R {3e12, 3e12, 3e12}; 
+        Vector3d qRF_vel {1e10, 1e10, 1e10}; 
+        Vector3d qRF_angvel {3e12, 3e12, 3e12}; 
 
-        Vector3d qLF_p {10000000000000, 10000000000000, 10000000000000};
-        Vector3d qLF_R {1, 1, 1};
-        Vector3d qLF_vel {3000000000, 3000000000, 3000000000};
-        Vector3d qLF_angvel {1, 1, 1};
+        Vector3d qLF_p {1e10, 1e10, 1e10};  
+        Vector3d qLF_R {3e12, 3e12, 3e12}; 
+        Vector3d qLF_vel {1e10, 1e10, 1e10};  
+        Vector3d qLF_angvel {3e12, 3e12, 3e12}; 
 
-        Vector3d qRH_p {3000000, 3000000, 3000000};
-        Vector3d qRH_R {1, 1, 1};
-        Vector3d qRH_vel {3000000, 3000000, 3000000};
-        Vector3d qRH_angvel {1, 1, 1};
+        Vector3d qRH_p {1e11, 1e11, 1e11}; 
+        Vector3d qRH_R {3e12, 3e12, 3e12}; 
+        Vector3d qRH_vel {1e11, 1e11, 1e11}; 
+        Vector3d qRH_angvel {3e12, 3e12, 3e12}; 
 
         Vector3d rRF_lacc {1, 1, 1};
         Vector3d rRF_aacc {1, 1, 1};
@@ -150,10 +152,10 @@ protected:
         Vector3d rRH_lacc {1, 1, 1};
         Vector3d rRH_aacc {1, 1, 1};
 
-        Vector3d wf_RF {0.95, 0.95, 0.95};
-        Vector3d wt_RF {0.95, 0.95, 0.95};
-        Vector3d wf_LF {0.95, 0.95, 0.95};
-        Vector3d wt_LF {0.95, 0.95, 0.95};
+        Vector3d wf_RF {0.95, 0.95, 0.95}; 
+        Vector3d wt_RF {0.95, 0.95, 0.95}; 
+        Vector3d wf_LF {0.95, 0.95, 0.95}; 
+        Vector3d wt_LF {0.95, 0.95, 0.95}; 
         Vector3d wf_RH {0.95, 0.95, 0.95};
         Vector3d wt_RH {0.95, 0.95, 0.95};
 
@@ -176,7 +178,7 @@ public:
 
     Stabilizer(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots, unsigned int robotIndex);
 
-    /**
+    /** This function formulates the LQR gain computation method from the linearized Matrices (Discrete, Infinite Horizon computation)
      * @brief Computes the LQR gain matrix (usually denoted K)
      * @param A State matrix of the underlying system
      * @param B Input matrix of the underlying system
@@ -193,17 +195,12 @@ public:
 
     // This function computes the skew symmetric matrix of a given 3D vector
 
-    inline Matrix3d S(Vector3d v);
+    inline Matrix3d S(Vector3d const &v);
 
     // This function transforms a rotation matrix to a 3d Vector
     // The transformation is based on the matrix/ axis-angle transformation
 
-    Vector3d Mat2Ang(Matrix3d M);
-
-    /** This structure contains the stabilizer's configuration: constant values, the robot's mass  
-     * and Inertia, the stiffness/damping matrices of the contacts and of the com/base accelerations, and the 
-     * Weight matrices for the LQR and for the kinematics/force tradeoff 
-    */
+    Vector3d Mat2Ang(Matrix3d const &M);
 
     // This function sets the stabilizer's configuration defined in the struct configuration
 
@@ -222,11 +219,11 @@ public:
 
     feedback getFeedback(mc_rbdyn::Robots &robots, mc_rbdyn::Robots &realRobots);
 
-    // This function computes the LQR gain from the linearized Matrices
+    // This function computes the linearized Matrices needed for the LQR gain computation
 
     linearMatrix computeMatrix(state &x_ref, configuration &config);
 
-    // This function computes the LQR gain from the linearized Matrices
+    // This function computes the LQR gain from the linearized Matrices using the "lqrgain" function defined above 
 
     MatrixXd computeGain(linearMatrix &linearMatrix, configuration &config);
 
@@ -236,13 +233,19 @@ public:
 
     // This function generates the accelerations written in the world frame for the contact tasks
 
-    accelerations computeAccelerations(const MatrixXd &K, feedback &feedback, state &x_ref, configuration &config, error &error, mc_rbdyn::Robots &robots);
+    accelerations computeAccelerations(const MatrixXd &K, feedback &feedback, state &x_ref, configuration &config, error &error);
+
+    // Finite Differences Methods
+    
+    Vector3d finiteDifferences(Vector3d &vel, Vector3d &vel_old, double dt = 0.005);
 
     // Variables to compute and check while running the controller
 
     MatrixXd K_;
 
     state x_ref_;
+
+    Vector3d pc_dd_1, oc_dd_1, pc_dd_2, oc_dd_2, pc_dd_3, oc_dd_3;
 
     feedback feedback_;
 
@@ -338,8 +341,8 @@ private:
     Matrix3d Rint_3;
     Matrix3d Cb_3;
 
-    mc_rbdyn::Robots robots_;
-    mc_rbdyn::Robots realRobots_;
+    mc_rbdyn::Robots & robots_;
+    mc_rbdyn::Robots & realRobots_;
 
     unsigned int robotIndex_;
 
