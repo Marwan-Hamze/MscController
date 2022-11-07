@@ -106,6 +106,7 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
   logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
+  logger().addLogEntry("CoP_RightHand", [this]() {return realRobots().robot().cop("RightHand");});
 
 }
 
