@@ -513,17 +513,24 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
       mc_rtc::gui::plot::Y(
           "CoM(x)", [this]() { return realRobots().robot().com().x(); }, Color::Red));
 
-  gui()->addPlot(
-      "Right Hand CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
-      mc_rtc::gui::plot::Y(
-          "CoP(x)", [this]() { return realRobots().robot().cop("RightHand").x(); }, Color::Green));
-
 /*   gui()->addPlot(
-      "Right Hand Force (t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+      "Right Hand Normal Force (t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "f_RH(z)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red), 
       mc_rtc::gui::plot::Y(
           "f_RH(x)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green),
       mc_rtc::gui::plot::Y(
-          "f_RH(y)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue)); */
+          "f_RH(y)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue));
+} */
+
+  gui()->addPlot(
+      "Right Hand Normal Force (t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "f_RH(x)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green));
+
+  gui()->addPlot(
+      "Right Hand CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "CoP(x)", [this]() { return realRobots().robot().cop("RightHand").x(); }, Color::Green));
+
 }
