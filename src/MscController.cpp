@@ -527,10 +527,10 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
       "Right Hand Normal Force (t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "f_RH(x)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green));
-
+/* 
   gui()->addPlot(
       "Right Hand CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
-          "CoP(x)", [this]() { return realRobots().robot().cop("RightHand").x(); }, Color::Green));
+          "CoP(x)", [this]() { return realRobots().robot().cop("RightHand").x(); }, Color::Green)); */
 
 }
