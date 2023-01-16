@@ -51,6 +51,10 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   fLF_ = fLF_.Zero();
   tLF_ = tLF_.Zero();
 
+  fr_x_ = 0.0;
+  fr_y_ = 0.0;
+
+
   logger().addLogEntry("Error_com_Position", [this]() { return com_; });
   logger().addLogEntry("Error_com_Orientation", [this]() { return theta_; });
   logger().addLogEntry("Error_com_Velocity", [this]() { return comd_; });
@@ -74,6 +78,11 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
   logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
+
+  // Logging the Friction at the Right Foot
+
+  logger().addLogEntry("Friction_RightFoot_x", [this]() {return fr_x_;});
+  logger().addLogEntry("Friction_RightFoot_y", [this]() {return fr_y_;});
 
   // Setting Logger Entries for the accelerations of the CoM, Base (angular), and Right Foot, all written in the world frame.
   // "The desired" accelerations are sent to the QP, the "achieved" accelerations are the derivatives of the velocities 
@@ -409,6 +418,27 @@ bool MscController::run()
     omLF_ = stab_->x_delta_.block(33,0,3,1);
     fLF_ = stab_->f_delta_.block(6,0,3,1);
     tLF_ = stab_->f_delta_.block(9,0,3,1);
+
+    // To log the Friction at the Right Foot
+
+    f_x_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x();
+    f_y_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y();
+    f_z_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z();
+
+
+    if(f_z_ == 0.0 ) {
+    
+    fr_x_ = 0.0;
+    fr_y_ = 0.0;
+
+    }
+
+    else {
+
+    fr_x_ = f_x_/f_z_;
+    fr_y_ = f_y_/f_z_;
+
+    }
 
   }
 

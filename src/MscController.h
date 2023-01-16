@@ -44,6 +44,11 @@ private:
    
     Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
 
+
+  // Variables to calculate and Log the Contact Friction 
+
+    double f_x_, f_y_, f_z_, fr_x_, fr_y_;
+
     // Accelerations by Finite Differences to check the accelerations.
 
     Vector3d RF_linear_acc, RF_angular_acc, LF_linear_acc, LF_angular_acc;
