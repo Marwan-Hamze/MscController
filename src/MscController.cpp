@@ -67,6 +67,12 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   fRH_ = fRH_.Zero();
   tRH_ = tRH_.Zero();
 
+  fr_x_RF_ = 0.0;
+  fr_y_RF_ = 0.0;
+
+  fr_z_RH_ = 0.0;
+  fr_y_RH_ = 0.0;
+
   logger().addLogEntry("Error_com_Position", [this]() { return com_; });
   logger().addLogEntry("Error_com_Orientation", [this]() { return theta_; });
   logger().addLogEntry("Error_com_Velocity", [this]() { return comd_; });
@@ -107,6 +113,14 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
   logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
   logger().addLogEntry("CoP_RightHand", [this]() {return realRobots().robot().cop("RightHand");});
+
+  // Logging the Friction at the Right Foot and Right Hand
+
+  logger().addLogEntry("Friction_RightFoot_x", [this]() {return fr_x_RF_;});
+  logger().addLogEntry("Friction_RightFoot_y", [this]() {return fr_y_RF_;});
+
+/*   logger().addLogEntry("Friction_RightHand_x", [this]() {return fr_z_RH_;});
+  logger().addLogEntry("Friction_RightHand_y", [this]() {return fr_y_RH_;}); */
 
 }
 
@@ -446,6 +460,45 @@ bool MscController::run()
     omRH_ = stab_->x_delta_.block(45,0,3,1);
     fRH_ = stab_->f_delta_.block(12,0,3,1);
     tRH_ = stab_->f_delta_.block(15,0,3,1);
+
+    // To log the Friction at the Right Foot and Right Hand
+    // To review for the RH since you're not choosing the normal force correctly
+
+    f_x_RF_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x();
+    f_y_RF_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y();
+    f_z_RF_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z();
+
+    f_x_RH_ = realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x();
+    f_y_RH_ = realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y();
+    f_z_RH_ = realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z();
+
+    if(f_z_RF_ == 0.0 ) {
+    
+    fr_x_RF_ = 0.0;
+    fr_y_RF_ = 0.0;
+
+    }
+
+    else {
+
+    fr_x_RF_ = f_x_RF_/f_z_RF_;
+    fr_y_RF_ = f_y_RF_/f_z_RF_;
+
+    }
+
+    if(f_x_RH_ == 0.0 ) {
+    
+    fr_z_RH_ = 0.0;
+    fr_y_RH_ = 0.0;
+
+    }
+
+    else {
+
+    fr_z_RH_ = f_z_RH_/f_x_RH_;
+    fr_y_RH_ = f_y_RH_/f_x_RH_;
+
+  }
 
   }
 
