@@ -1,4 +1,6 @@
-This branch implements the controller while enabling the kinemtic inertial estimator on a HRP-4 robot in a standing stance (2 contacts)
+This branch implements the controller on an HRP2KAI robot in a 2 contacts scenario.
+
+Estimation of the floating base is done using the kinematic inertial estimator.
 
 The controller is written using the [mc_rtc](https://jrl-umi3218.github.io/mc_rtc/index.html) framework.
 
