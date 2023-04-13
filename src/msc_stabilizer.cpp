@@ -162,19 +162,19 @@ config.W.block(15,15,3,3).diagonal() = config.wt_RF;
 config.W.block(24,24,3,3).diagonal() = config.wf_LF;
 config.W.block(27,27,3,3).diagonal() = config.wt_LF;
 
-config.KFP_RF << 2.5e4, 0, 0, 0, 2.5e4, 0, 0, 0, 2.5e4; //For rigid floor: 1e5 on the diagonal
-config.KFD_RF << 300, 0, 0, 0, 300, 0, 0, 0, 300; //For rigid floor: 400 on the diagonal
-config.KTP_RF << 500, 0, 0, 0, 500, 0, 0, 0, 500; //For rigid floor: 5000 on the diagonal
-config.KTD_RF << 1, 0, 0, 0, 1, 0, 0, 0, 1; //For rigid floor: 30 on the diagonal
+config.KFP_RF << 1e5, 0, 0, 0, 1e5, 0, 0, 0, 1e5; //For rigid floor: 1e5 on the diagonal. For compliant floor: 2.5e4 on the diagonal
+config.KFD_RF << 400, 0, 0, 0, 400, 0, 0, 0, 400; //For rigid floor: 400 on the diagonal. For compliant floor: 300 on the diagonal
+config.KTP_RF << 5000, 0, 0, 0, 5000, 0, 0, 0, 5000; //For rigid floor: 5000 on the diagonal. For compliant floor: 500 on the diagonal
+config.KTD_RF << 30, 0, 0, 0, 30, 0, 0, 0, 30; //For rigid floor: 30 on the diagonal. For compliant floor: 1 on the diagonal
 
-config.Rsc_RF = robots.robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose();
+config.Rsc_RF = robots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
 
-config.KFP_LF << 2.5e4, 0, 0, 0, 2.5e4, 0, 0, 0, 2.5e4; //For rigid floor: 1e5 on the diagonal
-config.KFD_LF << 300, 0, 0, 0, 300, 0, 0, 0, 300; //For rigid floor: 400 on the diagonal
-config.KTP_LF << 500, 0, 0, 0, 800, 0, 0, 0, 500; //For rigid floor: 5000 on the diagonal
-config.KTD_LF << 1, 0, 0, 0, 1, 0, 0, 0, 1; //For rigid floor: 30 on the diagonal
+config.KFP_LF << 1e5, 0, 0, 0, 1e5, 0, 0, 0, 1e5; //For rigid floor: 1e5 on the diagonal. For compliant floor: 2.5e4 on the diagonal
+config.KFD_LF << 400, 0, 0, 0, 400, 0, 0, 0, 400; //For rigid floor: 400 on the diagonal. For compliant floor: 300 on the diagonal
+config.KTP_LF << 5000, 0, 0, 0, 5000, 0, 0, 0, 5000; //For rigid floor: 5000 on the diagonal. For compliant floor: 500 on the diagonal (I put 800 in the middle)
+config.KTD_LF << 30, 0, 0, 0, 30, 0, 0, 0, 30; //For rigid floor: 30 on the diagonal. For compliant floor: 1 on the diagonal
 
-config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
+config.Rsc_LF = robots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
 
 
 // kp and kd are used for the CoM and Base tasks. They can be changed only from here
@@ -230,20 +230,20 @@ Vector3d pc_1, pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2;
 
 R = robots.robot().posW().rotation().transpose();
 
-pc_1 = robots.robot().bodyPosW("R_ANKLE_R_LINK").translation();
-Rc_1 = robots.robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose();
-pc_d_1 = robots.robot().bodyVelW("R_ANKLE_R_LINK").linear();
-oc_d_1 = robots.robot().bodyVelW("R_ANKLE_R_LINK").angular();
+pc_1 = robots.robot().bodyPosW("RLEG_LINK5").translation();
+Rc_1 = robots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
+pc_d_1 = robots.robot().bodyVelW("RLEG_LINK5").linear();
+oc_d_1 = robots.robot().bodyVelW("RLEG_LINK5").angular();
 
-pc_2 = robots.robot().bodyPosW("L_ANKLE_R_LINK").translation();
-Rc_2 = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
-pc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").linear();
-oc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").angular();
+pc_2 = robots.robot().bodyPosW("LLEG_LINK5").translation();
+Rc_2 = robots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
+pc_d_2 = robots.robot().bodyVelW("LLEG_LINK5").linear();
+oc_d_2 = robots.robot().bodyVelW("LLEG_LINK5").angular();
 
 x_ref.CoM.pos = robots.robot().com();
 x_ref.CoM.R = robots.robot().posW().rotation().transpose();
 x_ref.CoM.vel = robots.robot().comVelocity();    
-x_ref.CoM.angvel = robots.robot().bodyVelW("base_link").angular();
+x_ref.CoM.angvel = robots.robot().bodyVelW("BODY").angular();
 
 x_ref.rightFoot.pos = R.transpose() * (pc_1 - x_ref.CoM.pos);
 x_ref.rightFoot.R = R.transpose() * Rc_1;
@@ -271,28 +271,28 @@ feedback feedback;
 
 Matrix3d Rc_1_real, Rc_2_real;
 
-Rc_1_real = realRobots.robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose();
-Rc_2_real = realRobots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
+Rc_1_real = realRobots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
+Rc_2_real = realRobots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
 
 feedback.CoM.pos = robots.robot().com();
 feedback.CoM.R = robots.robot().posW().rotation().transpose();
 feedback.CoM.vel = robots.robot().comVelocity();    
-feedback.CoM.angvel = robots.robot().bodyVelW("base_link").angular();
+feedback.CoM.angvel = robots.robot().bodyVelW("BODY").angular();
 
-feedback.pc_1 = robots.robot().bodyPosW("R_ANKLE_R_LINK").translation();
-feedback.Rc_1 = robots.robot().bodyPosW("R_ANKLE_R_LINK").rotation().transpose();
-feedback.pc_d_1 = robots.robot().bodyVelW("R_ANKLE_R_LINK").linear();
-feedback.oc_d_1 = robots.robot().bodyVelW("R_ANKLE_R_LINK").angular();
+feedback.pc_1 = robots.robot().bodyPosW("RLEG_LINK5").translation();
+feedback.Rc_1 = robots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
+feedback.pc_d_1 = robots.robot().bodyVelW("RLEG_LINK5").linear();
+feedback.oc_d_1 = robots.robot().bodyVelW("RLEG_LINK5").angular();
 
-feedback.pc_2 = robots.robot().bodyPosW("L_ANKLE_R_LINK").translation();
-feedback.Rc_2 = robots.robot().bodyPosW("L_ANKLE_R_LINK").rotation().transpose();
-feedback.pc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").linear();
-feedback.oc_d_2 = robots.robot().bodyVelW("L_ANKLE_R_LINK").angular();
+feedback.pc_2 = robots.robot().bodyPosW("LLEG_LINK5").translation();
+feedback.Rc_2 = robots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
+feedback.pc_d_2 = robots.robot().bodyVelW("LLEG_LINK5").linear();
+feedback.oc_d_2 = robots.robot().bodyVelW("LLEG_LINK5").angular();
 
 feedback.x.CoM.pos = realRobots.robot().com();
 feedback.x.CoM.R = realRobots.robot().posW().rotation().transpose();
 feedback.x.CoM.vel = realRobots.robot().comVelocity();    
-feedback.x.CoM.angvel = realRobots.robot().bodyVelW("base_link").angular();
+feedback.x.CoM.angvel = realRobots.robot().bodyVelW("BODY").angular();
 
 feedback.x.rightFoot.pos = feedback.CoM.R.transpose() * (feedback.pc_1 - feedback.CoM.pos);
 feedback.x.rightFoot.R = feedback.CoM.R.transpose() * feedback.Rc_1;

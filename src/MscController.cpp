@@ -6,13 +6,13 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   config_.load(config);
   
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e7);
-  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot ().robotIndex(), 0, 1e7);
+  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("BODY", robots(), robots().robot ().robotIndex(), 0, 1e7);
 
-  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
-  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
+  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("RLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e7);
+  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("RLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e7);
 
-  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
-  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e7);
+  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("LLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e7);
+  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("LLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e7);
 
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex()));
 
@@ -153,19 +153,6 @@ bool MscController::run()
 
       mc_rtc::log::info("LeftFoot Linear Acceleration = \n{}\n" , stab_->accelerations_.LF_linAcc);
       mc_rtc::log::info("LeftFoot Angular Acceleration = \n{}\n" , stab_->accelerations_.LF_angAcc);
-
-      }));
-
-    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check Jacobians", [this]() {
-
-      mc_rtc::log::info("CoM Task Jacobian = \n{}\n" , comTask_->jac());
-      mc_rtc::log::info("Base Task Jacobian = \n{}\n" , baseTask_->jac());
-    
-      mc_rtc::log::info("RightFoot Position Task Jacobian = \n{}\n" , rightFoot_PosTask_->jac());
-      mc_rtc::log::info("RightFoot Orientation Task Jacobian = \n{}\n" , rightFoot_OrTask_->jac());
-
-      mc_rtc::log::info("LeftFoot Position Task Jacobian = \n{}\n" , leftFoot_PosTask_->jac());
-      mc_rtc::log::info("LeftFoot Orientation Task Jacobian = \n{}\n" , leftFoot_OrTask_->jac());
 
       }));
 

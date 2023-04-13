@@ -32,26 +32,26 @@ constraints:
   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
 # Collision constraint
-collisions:
-- type: collision
-  useMinimal: true
-- type: collision
-  r1: hrp4
-  r2: tilted_board
-  collisions:
-    - body1: L_WRIST_Y_LINK
-      body2: ground
-      iDist: 0.5
-      sDist: 0.02
-      damping: 0.0
+#collisions:
+#- type: collision
+#  useMinimal: true
+#- type: collision
+#  r1: hrp2_drc
+#  r2: tilted_board
+#  collisions:
+#    - body1: LHAND_LINK4
+#      body2: ground
+#      iDist: 0.5
+#      sDist: 0.02
+#      damping: 0.0
 # Initial set of contacts
 contacts:
-- r1: hrp4
+- r1: hrp2_drc
   r2: ground
   r1Surface: LeftFoot
   r2Surface: AllGround
   dof: [0,0,0,0,0,0]
-- r1: hrp4
+- r1: hrp2_drc
   r2: ground
   r1Surface: RightFoot
   r2Surface: AllGround
@@ -60,7 +60,7 @@ contacts:
       #[0,0,0,0,0,0]
 
 # Some options for a specific robot
-hrp4:
+hrp2_drc:
   posture:
     stiffness: 1
     weight: 1
