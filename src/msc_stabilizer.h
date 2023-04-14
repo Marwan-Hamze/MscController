@@ -125,20 +125,20 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {1e10, 1e10, 1e10}; //For rigid floor: {1e10, 1e10, 1e10}. For compliant floor: {1e6, 1e6, 1e6}
-        Vector3d qcom_R {1e9, 1e9, 1e9}; //For rigid floor: {1e9, 1e9, 1e9}. For compliant floor: {3e4, 3e4, 3e4}
-        Vector3d qcom_vel {3e8, 3e8, 3e8}; //For rigid floor: {3e8, 3e8, 3e8}. For compliant floor: {3e2, 3e2, 3e2}
-        Vector3d qcom_angvel {3e6, 3e6, 3e6}; //For rigid floor: {3e6, 3e6, 3e6}. For compliant floor: {3e3, 3e3, 3e3}
+        Vector3d qcom_p {3e6, 3e6, 3e6}; //For rigid floor: {1e10, 1e10, 1e10}. For compliant floor: {1e6, 1e6, 1e6}
+        Vector3d qcom_R {1e4, 1e4, 1e4}; //For rigid floor: {1e9, 1e9, 1e9}. For compliant floor: {3e4, 3e4, 3e4}
+        Vector3d qcom_vel {3e3, 3e3, 3e3}; //For rigid floor: {3e8, 3e8, 3e8}. For compliant floor: {3e2, 3e2, 3e2}
+        Vector3d qcom_angvel {1e2, 1e2, 1e2}; //For rigid floor: {3e6, 3e6, 3e6}. For compliant floor: {3e3, 3e3, 3e3}
 
-        Vector3d qRF_p {3e11, 3e11, 3e11}; //For rigid floor: {3e11, 3e11, 3e11}. For compliant floor: {3e6, 3e6, 3e6}
-        Vector3d qRF_R {3e7, 3e7, 3e7}; //For rigid floor: {3e7, 3e7, 3e7}. For compliant floor: {1e5, 1e5, 1e5}
-        Vector3d qRF_vel {1e9, 1e9, 1e9}; //For rigid floor: {1e9, 1e9, 1e9}. For compliant floor: {1e5, 1e5, 1e5}
-        Vector3d qRF_angvel {3e8, 3e8, 3e8}; //For rigid floor: {3e8, 3e8, 3e8}. For compliant floor: {1e4, 1e4, 1e4}
+        Vector3d qRF_p {3e7, 3e7, 3e7}; //For rigid floor: {3e11, 3e11, 3e11}. For compliant floor: {3e6, 3e6, 3e6}
+        Vector3d qRF_R {3e4, 3e4, 3e4}; //For rigid floor: {3e7, 3e7, 3e7}. For compliant floor: {1e5, 1e5, 1e5}
+        Vector3d qRF_vel {3e3, 3e3, 3e3}; //For rigid floor: {1e9, 1e9, 1e9}. For compliant floor: {1e5, 1e5, 1e5}
+        Vector3d qRF_angvel {1e2, 1e2, 1e2}; //For rigid floor: {3e8, 3e8, 3e8}. For compliant floor: {1e4, 1e4, 1e4}
 
-        Vector3d qLF_p {3e11, 3e11, 3e11}; //For rigid floor: {3e11, 3e11, 3e11}. For compliant floor: {3e6, 3e6, 3e6}
-        Vector3d qLF_R {3e7, 3e7, 3e7}; //For rigid floor: {3e7, 3e7, 3e7}. For compliant floor: {1e5, 1e5, 1e5}
-        Vector3d qLF_vel {1e9, 1e9, 1e9}; //For rigid floor: {1e9, 1e9, 1e9}. For compliant floor: {1e5, 1e5, 1e5}
-        Vector3d qLF_angvel {3e8, 3e8, 3e8}; //For rigid floor: {3e8, 3e8, 3e8}. For compliant floor: {1e4, 1e4, 1e4}
+        Vector3d qLF_p {3e7, 3e7, 3e7}; //For rigid floor: {3e11, 3e11, 3e11}. For compliant floor: {3e6, 3e6, 3e6}
+        Vector3d qLF_R {3e4, 3e4, 3e4}; //For rigid floor: {3e7, 3e7, 3e7}. For compliant floor: {1e5, 1e5, 1e5}
+        Vector3d qLF_vel {3e3, 3e3, 3e3}; //For rigid floor: {1e9, 1e9, 1e9}. For compliant floor: {1e5, 1e5, 1e5}
+        Vector3d qLF_angvel {1e2, 1e2, 1e2}; //For rigid floor: {3e8, 3e8, 3e8}. For compliant floor: {1e4, 1e4, 1e4}
 
         Vector3d rRF_lacc {1, 1, 1};
         Vector3d rRF_aacc {1, 1, 1};

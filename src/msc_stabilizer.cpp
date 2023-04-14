@@ -162,17 +162,17 @@ config.W.block(15,15,3,3).diagonal() = config.wt_RF;
 config.W.block(24,24,3,3).diagonal() = config.wf_LF;
 config.W.block(27,27,3,3).diagonal() = config.wt_LF;
 
-config.KFP_RF << 1e5, 0, 0, 0, 1e5, 0, 0, 0, 1e5; //For rigid floor: 1e5 on the diagonal. For compliant floor: 2.5e4 on the diagonal
-config.KFD_RF << 400, 0, 0, 0, 400, 0, 0, 0, 400; //For rigid floor: 400 on the diagonal. For compliant floor: 300 on the diagonal
-config.KTP_RF << 5000, 0, 0, 0, 5000, 0, 0, 0, 5000; //For rigid floor: 5000 on the diagonal. For compliant floor: 500 on the diagonal
-config.KTD_RF << 30, 0, 0, 0, 30, 0, 0, 0, 30; //For rigid floor: 30 on the diagonal. For compliant floor: 1 on the diagonal
+config.KFP_RF << 3e5, 0, 0, 0, 3e5, 0, 0, 0, 3e5; //For rigid floor: 1e5 on the diagonal. For compliant floor: 2.5e4 on the diagonal
+config.KFD_RF << 500, 0, 0, 0, 500, 0, 0, 0, 500; //For rigid floor: 400 on the diagonal. For compliant floor: 300 on the diagonal
+config.KTP_RF << 6000, 0, 0, 0, 6000, 0, 0, 0, 6000; //For rigid floor: 5000 on the diagonal. For compliant floor: 500 on the diagonal
+config.KTD_RF << 50, 0, 0, 0, 50, 0, 0, 0, 50; //For rigid floor: 30 on the diagonal. For compliant floor: 1 on the diagonal
 
 config.Rsc_RF = robots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
 
-config.KFP_LF << 1e5, 0, 0, 0, 1e5, 0, 0, 0, 1e5; //For rigid floor: 1e5 on the diagonal. For compliant floor: 2.5e4 on the diagonal
-config.KFD_LF << 400, 0, 0, 0, 400, 0, 0, 0, 400; //For rigid floor: 400 on the diagonal. For compliant floor: 300 on the diagonal
-config.KTP_LF << 5000, 0, 0, 0, 5000, 0, 0, 0, 5000; //For rigid floor: 5000 on the diagonal. For compliant floor: 500 on the diagonal (I put 800 in the middle)
-config.KTD_LF << 30, 0, 0, 0, 30, 0, 0, 0, 30; //For rigid floor: 30 on the diagonal. For compliant floor: 1 on the diagonal
+config.KFP_LF << 3e5, 0, 0, 0, 3e5, 0, 0, 0, 3e5; //For rigid floor: 1e5 on the diagonal. For compliant floor: 2.5e4 on the diagonal
+config.KFD_LF << 500, 0, 0, 0, 500, 0, 0, 0, 500; //For rigid floor: 400 on the diagonal. For compliant floor: 300 on the diagonal
+config.KTP_LF << 6000, 0, 0, 0, 6000, 0, 0, 0, 6000; //For rigid floor: 5000 on the diagonal. For compliant floor: 500 on the diagonal (I put 800 in the middle)
+config.KTD_LF << 50, 0, 0, 0, 50, 0, 0, 0, 50; //For rigid floor: 30 on the diagonal. For compliant floor: 1 on the diagonal
 
 config.Rsc_LF = robots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
 
