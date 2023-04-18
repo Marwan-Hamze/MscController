@@ -460,12 +460,12 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
 
   using Color = mc_rtc::gui::Color;
   gui()->addPlot(
-      "Right Foot CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+      "Right Foot CoP(t)", mc_rtc::gui::plot::X("t",  [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoP(x)", [this]() { return realRobots().robot().cop("RightFoot").x(); }, Color::Blue));
 
   gui()->addPlot(
-      "Robot's CoM(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+      "Robot's CoM(t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoM(x)", [this]() { return realRobots().robot().com().x(); }, Color::Red));
 
