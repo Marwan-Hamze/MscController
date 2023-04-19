@@ -125,30 +125,30 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {1e2, 1e2, 1e2}; //In Simulation: {3e8, 3e8, 3e8}
-        Vector3d qcom_R {1e0, 1e0, 1e0}; //In Simulation: {1e4, 1e4, 1e4}
-        Vector3d qcom_vel {3e1, 3e1, 3e1}; //In Simulation: {1e5, 1e5, 1e5}
-        Vector3d qcom_angvel {1e0, 1e0, 1e0}; //In Simulation: {1e3, 1e3, 1e3}
+        Vector3d qcom_p {1e2, 1e2, 1e2}; //In Simulation: {3e5, 3e5, 3e5} - Starting Point: {1e2, 1e2, 1e2}
+        Vector3d qcom_R {1e0, 1e0, 1e0}; //In Simulation: {1e2, 1e2, 1e2} - Starting Point: {1e0, 1e0, 1e0}
+        Vector3d qcom_vel {3e1, 3e1, 3e1}; //In Simulation: {3e2, 3e2, 3e2} - Starting Point: {3e1, 3e1, 3e1}
+        Vector3d qcom_angvel {1e0, 1e0, 1e0}; //In Simulation: {3e1, 3e1, 3e1} - Starting Point: {1e0, 1e0, 1e0}
 
-        Vector3d qRF_p {1e4, 1e4, 1e4}; //In Simulation: {1e9, 1e9, 1e9}
-        Vector3d qRF_R {1e2, 1e2, 1e2}; //In Simulation: {3e6, 3e6, 3e6}
-        Vector3d qRF_vel {3e2, 3e2, 3e2}; //In Simulation: {3e6, 3e6, 3e6}
-        Vector3d qRF_angvel {3e1, 3e1, 3e1}; //In Simulation: {1e4, 1e4, 1e4}
+        Vector3d qRF_p {1e6, 1e6, 1e6}; //In Simulation: {1e6, 1e6, 1e6} - Starting Point: {1e6, 1e6, 1e6}
+        Vector3d qRF_R {1e2, 1e2, 1e2}; //In Simulation: {3e4, 3e4, 3e4} - Starting Point: {1e2, 1e2, 1e2}
+        Vector3d qRF_vel {3e2, 3e2, 3e2}; //In Simulation: {3e3, 3e3, 3e3} - Starting Point: {3e2, 3e2, 3e2}
+        Vector3d qRF_angvel {3e1, 3e1, 3e1}; //In Simulation: {1e3, 1e3, 1e3} - Starting Point: {3e1, 3e1, 3e1}
 
-        Vector3d qLF_p {1e4, 1e4, 1e4}; //In Simulation: {1e9, 1e9, 1e9}
-        Vector3d qLF_R {1e2, 1e2, 1e2}; //In Simulation: {3e6, 3e6, 3e6}
-        Vector3d qLF_vel {3e2, 3e2, 3e2}; //In Simulation: {3e6, 3e6, 3e6}
-        Vector3d qLF_angvel {3e1, 3e1, 3e1}; //In Simulation: {1e4, 1e4, 1e4}
+        Vector3d qLF_p {1e6, 1e6, 1e6}; //In Simulation: {1e6, 1e6, 1e6} - Starting Point: {1e6, 1e6, 1e6}
+        Vector3d qLF_R {1e2, 1e2, 1e2}; //In Simulation: {3e4, 3e4, 3e4} - Starting Point: {1e2, 1e2, 1e2}
+        Vector3d qLF_vel {3e2, 3e2, 3e2}; //In Simulation: {3e3, 3e3, 3e3} - Starting Point: {3e2, 3e2, 3e2}
+        Vector3d qLF_angvel {3e1, 3e1, 3e1}; //In Simulation: {1e3, 1e3, 1e3} - Starting Point: {3e1, 3e1, 3e1}
 
         Vector3d rRF_lacc {1, 1, 1};
         Vector3d rRF_aacc {1, 1, 1};
         Vector3d rLF_lacc {1, 1, 1};
         Vector3d rLF_aacc {1, 1, 1};
 
-        Vector3d wf_RF {0.98, 0.98, 0.98}; //In Simulation: {0.98, 0.98, 0.98}
-        Vector3d wt_RF {0.98, 0.98, 0.98}; //In Simulation: {0.98, 0.98, 0.98}
-        Vector3d wf_LF {0.98, 0.98, 0.98}; //In Simulation: {0.98, 0.98, 0.98}
-        Vector3d wt_LF {0.98, 0.98, 0.98}; //In Simulation: {0.98, 0.98, 0.98}
+        Vector3d wf_RF {0, 0, 0}; //In Simulation: {0.5, 0.5, 0.5} - Starting Point: {0, 0, 0}
+        Vector3d wt_RF {0, 0, 0}; //In Simulation: {0.5, 0.5, 0.5} - Starting Point: {0, 0, 0}
+        Vector3d wf_LF {0, 0, 0}; //In Simulation: {0.5, 0.5, 0.5} - Starting Point: {0, 0, 0}
+        Vector3d wt_LF {0, 0, 0}; //In Simulation: {0.5, 0.5, 0.5} - Starting Point: {0, 0, 0}
 
         Matrix3d KFP_RF, KFP_LF;
         Matrix3d KFD_RF, KFD_LF;
