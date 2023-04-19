@@ -32,18 +32,9 @@ constraints:
   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
 # Collision constraint
-#collisions:
-#- type: collision
-#  useMinimal: true
-#- type: collision
-#  r1: hrp2_drc
-#  r2: tilted_board
-#  collisions:
-#    - body1: LHAND_LINK4
-#      body2: ground
-#      iDist: 0.5
-#      sDist: 0.02
-#      damping: 0.0
+collisions:
+- type: collision
+  useMinimal: true
 # Initial set of contacts
 contacts:
 - r1: hrp2_drc

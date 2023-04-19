@@ -5,8 +5,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 {
   config_.load(config);
   
-  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e7);
-  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("BODY", robots(), robots().robot ().robotIndex(), 0, 1e7);
+  comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e5);
+  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("BODY", robots(), robots().robot ().robotIndex(), 0, 1e5);
 
   rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("RLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e7);
   rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("RLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e7);
@@ -206,6 +206,9 @@ bool MscController::run()
   gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Enable", [this]() {
     
     stabilizer = true;
+
+    comTask_->selectActiveJoints(Activedof_);
+    baseTask_->selectActiveJoints(Activedof_);
 
     solver().addTask(comTask_);
     solver().addTask(baseTask_);
