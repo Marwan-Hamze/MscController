@@ -20,9 +20,9 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   // Setting the anchor frame for the Kinematic Inertial estimator
 
-  double leftFootRatio = 0.5;
+  
   datastore().make_call("KinematicAnchorFrame::" + robot().name(),
-                          [this, &leftFootRatio](const mc_rbdyn::Robot & robot)
+                          [this](const mc_rbdyn::Robot & robot)
                           {
                             return sva::interpolate(robot.surfacePose("LeftFoot"),
                                                     robot.surfacePose("RightFoot"),
@@ -209,12 +209,6 @@ bool MscController::run()
     
     stabilizer = true;
 
-    comTask_->selectActiveJoints(Activedof_);
-    baseTask_->selectActiveJoints(Activedof_);
-
-    solver().addTask(comTask_);
-    solver().addTask(baseTask_);
-
     solver().addTask(rightFoot_PosTask_);
     solver().addTask(rightFoot_OrTask_);
 
@@ -343,9 +337,6 @@ bool MscController::run()
     
     stabilizer = false;
 
-    solver().removeTask(comTask_);
-    solver().removeTask(baseTask_);
-
     solver().removeTask(rightFoot_PosTask_);
     solver().removeTask(rightFoot_OrTask_);
     
@@ -454,6 +445,14 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   leftFoot_PosTask_->reset();
   leftFoot_OrTask_->reset();
 
+  // Add the CoM and Base Tasks permanently to not cause the drifting of the base of the robot when the controller is disabled
+
+  comTask_->selectActiveJoints(Activedof_);
+  baseTask_->selectActiveJoints(Activedof_);
+
+  solver().addTask(comTask_);
+  solver().addTask(baseTask_);
+
   const auto & observerp = observerPipeline(observerPipelineName_);
   
   if(observerp.success())
@@ -464,14 +463,25 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
 // Plot related code in RViz
 
   using Color = mc_rtc::gui::Color;
+
   gui()->addPlot(
-      "Right Foot CoP(t)", mc_rtc::gui::plot::X("t",  [this]() { return t_; }),
+      "Right Foot CoP_x(t)", mc_rtc::gui::plot::X("t",  [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoP(x)", [this]() { return realRobots().robot().cop("RightFoot").x(); }, Color::Blue));
 
   gui()->addPlot(
-      "Robot's CoM(t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
+      "Right Foot CoP_y(t)", mc_rtc::gui::plot::X("t",  [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "CoP(y)", [this]() { return realRobots().robot().cop("RightFoot").y(); }, Color::Blue));
+
+  gui()->addPlot(
+      "Robot's CoM_x(t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoM(x)", [this]() { return realRobots().robot().com().x(); }, Color::Red));
+
+  gui()->addPlot(
+      "Robot's CoM_y(t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "CoM(y)", [this]() { return realRobots().robot().com().y(); }, Color::Red));
 
 }

@@ -39,7 +39,11 @@ private:
     bool main = false;
     bool ref = false;
     bool compute = false;
-   
+
+    // Ratio for the kinematic inertial
+    
+    double leftFootRatio = 0.5;
+
    // Vectors to add error signals to the logs
    
     Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
