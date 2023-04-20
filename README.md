@@ -6,9 +6,7 @@ The controller is written using the [mc_rtc](https://jrl-umi3218.github.io/mc_rt
 
 Build and Install using CMAKE.
 
-Run any Choreonoid file using the HRP4 robot then mc_rtc_ticker display.launch. (Running the Choreonoid files installed with this repository might not work)
-
-The default configuration corresponds to the case when the robot is standing on 2 deformable surfaces. The configuration needs to be changed so that the controller works when the robot is standing on the rigid, flat ground.
+Run any Choreonoid file using the HRP2KAI robot then mc_rtc_ticker display.launch. (Running the Choreonoid files installed with this repository might not work)
 
 ## GUI use description
 
