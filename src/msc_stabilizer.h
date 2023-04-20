@@ -131,14 +131,14 @@ protected:
         Vector3d qcom_angvel {1e0, 1e0, 1e0}; //In Simulation: {3e1, 3e1, 3e1} - Starting Point: {1e0, 1e0, 1e0}
 
         Vector3d qRF_p {1e6, 1e6, 1e6}; //In Simulation: {1e6, 1e6, 1e6} - Starting Point: {1e6, 1e6, 1e6}
-        Vector3d qRF_R {1e2, 1e2, 1e2}; //In Simulation: {3e4, 3e4, 3e4} - Starting Point: {1e2, 1e2, 1e2}
-        Vector3d qRF_vel {3e2, 3e2, 3e2}; //In Simulation: {3e3, 3e3, 3e3} - Starting Point: {3e2, 3e2, 3e2}
-        Vector3d qRF_angvel {3e1, 3e1, 3e1}; //In Simulation: {1e3, 1e3, 1e3} - Starting Point: {3e1, 3e1, 3e1}
+        Vector3d qRF_R {1e2, 1e2, 1e2}; //In Simulation: {1e4, 1e4, 1e4} - Starting Point: {1e2, 1e2, 1e2}
+        Vector3d qRF_vel {3e2, 3e2, 3e2}; //In Simulation: {1e4, 1e4, 1e4} - Starting Point: {3e2, 3e2, 3e2}
+        Vector3d qRF_angvel {3e1, 3e1, 3e1}; //In Simulation: {3e2, 3e2, 3e2} - Starting Point: {3e1, 3e1, 3e1}
 
         Vector3d qLF_p {1e6, 1e6, 1e6}; //In Simulation: {1e6, 1e6, 1e6} - Starting Point: {1e6, 1e6, 1e6}
-        Vector3d qLF_R {1e2, 1e2, 1e2}; //In Simulation: {3e4, 3e4, 3e4} - Starting Point: {1e2, 1e2, 1e2}
-        Vector3d qLF_vel {3e2, 3e2, 3e2}; //In Simulation: {3e3, 3e3, 3e3} - Starting Point: {3e2, 3e2, 3e2}
-        Vector3d qLF_angvel {3e1, 3e1, 3e1}; //In Simulation: {1e3, 1e3, 1e3} - Starting Point: {3e1, 3e1, 3e1}
+        Vector3d qLF_R {1e2, 1e2, 1e2}; //In Simulation: {1e4, 1e4, 1e4} - Starting Point: {1e2, 1e2, 1e2}
+        Vector3d qLF_vel {3e2, 3e2, 3e2}; //In Simulation: {1e4, 1e4, 1e4} - Starting Point: {3e2, 3e2, 3e2}
+        Vector3d qLF_angvel {3e1, 3e1, 3e1}; //In Simulation: {3e2, 3e2, 3e2} - Starting Point: {3e1, 3e1, 3e1}
 
         Vector3d rRF_lacc {1, 1, 1};
         Vector3d rRF_aacc {1, 1, 1};

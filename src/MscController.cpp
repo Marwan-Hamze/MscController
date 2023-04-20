@@ -4,6 +4,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 : mc_control::fsm::Controller(rm, dt, config)
 {
   config_.load(config);
+
+  Activedof_ = config("active_dof");
   
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e5);
   baseTask_ = std::make_shared<mc_tasks::OrientationTask>("BODY", robots(), robots().robot ().robotIndex(), 0, 1e5);

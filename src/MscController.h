@@ -82,7 +82,6 @@ private:
 
     // Active Joints for the CoM and Base tasks
 
-    std::vector<std::string> Activedof_ = {"Root", "LLEG_JOINT0", "LLEG_JOINT1", "LLEG_JOINT2", "LLEG_JOINT3", "LLEG_JOINT4", "LLEG_JOINT5", 
-                                           "RLEG_JOINT0", "RLEG_JOINT1", "RLEG_JOINT2", "RLEG_JOINT3", "RLEG_JOINT4", "RLEG_JOINT5"};
+    std::vector<std::string> Activedof_;
 
 };
