@@ -318,7 +318,53 @@ bool MscController::run()
     
     mc_rtc::log::info("W = \n{}\n" , stab_->config_.W);
     }));
+    
+  // Configuration of the Stiffness and Damping of the Contacts GUI
 
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::Label("Configure Compliance:", []() { return "Set the Values corresponding to:"; }));
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Stiffness_RF", [this]() {
+    return stab_->config_.kfp_rf; }, [this](Eigen::Vector3d kfp_rf){ stab_->config_.kfp_rf = kfp_rf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Damping_RF", [this]() {
+    return stab_->config_.kfd_rf; }, [this](Eigen::Vector3d kfd_rf){ stab_->config_.kfd_rf = kfd_rf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Stiffness_RF", [this]() {
+    return stab_->config_.ktp_rf; }, [this](Eigen::Vector3d ktp_rf){ stab_->config_.ktp_rf = ktp_rf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Damping_RF", [this]() {
+    return stab_->config_.ktd_rf;  }, [this](Eigen::Vector3d ktd_rf){ stab_->config_.ktd_rf = ktd_rf; }));
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Stiffness_LF", [this]() {
+    return stab_->config_.kfp_lf; }, [this](Eigen::Vector3d kfp_lf){ stab_->config_.kfp_lf = kfp_lf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Damping_LF", [this]() {
+    return stab_->config_.kfd_lf; }, [this](Eigen::Vector3d kfd_lf){ stab_->config_.kfd_lf = kfd_lf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Stiffness_LF", [this]() {
+    return stab_->config_.ktp_lf; }, [this](Eigen::Vector3d ktp_lf){ stab_->config_.ktp_lf = ktp_lf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Damping_LF", [this]() {
+    return stab_->config_.ktd_lf;  }, [this](Eigen::Vector3d ktd_lf){ stab_->config_.ktd_lf = ktd_lf; }));
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::Button("Update", [this]() {
+    
+    stab_->reconfigure(stab_->config_);
+    stab_->linearMatrix_ = stab_->computeMatrix(stab_->x_ref_, stab_->config_);
+    stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_);
+
+    mc_rtc::log::info("The LQR Gain is Updated \n");
+
+    }));
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::Button("Check Compliance", [this]() {
+    
+    mc_rtc::log::info("KFP_RF = \n{}\n" , stab_->config_.KFP_RF);
+    mc_rtc::log::info("KFD_RF = \n{}\n" , stab_->config_.KFD_RF);
+    mc_rtc::log::info("KTP_RF = \n{}\n" , stab_->config_.KTP_RF);
+    mc_rtc::log::info("KTD_RF = \n{}\n" , stab_->config_.KTD_RF);
+
+    mc_rtc::log::info("KFP_LF = \n{}\n" , stab_->config_.KFP_LF);
+    mc_rtc::log::info("KFD_LF = \n{}\n" , stab_->config_.KFD_LF);
+    mc_rtc::log::info("KTP_LF = \n{}\n" , stab_->config_.KTP_LF);
+    mc_rtc::log::info("KTD_LF = \n{}\n" , stab_->config_.KTD_LF);
+
+    }));
+ 
   flip = true;
    }
 
@@ -330,7 +376,7 @@ bool MscController::run()
   gui()->removeCategory({"Stabilizer","Tuning Q"});
   gui()->removeCategory({"Stabilizer","Tuning R"});
   gui()->removeCategory({"Stabilizer","Tuning W"});
-  gui()->removeCategory({"Stabilizer","Stop"});
+  gui()->removeCategory({"Stabilizer","Tuning Compliance"});
 
 
   gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Disable", [this]() {

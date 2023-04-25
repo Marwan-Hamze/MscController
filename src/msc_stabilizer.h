@@ -155,6 +155,16 @@ protected:
         Matrix3d KTP_RF, KTP_LF;
         Matrix3d KTD_RF, KTD_LF;
 
+        Vector3d kfp_rf {4e4, 4e4, 4e4};
+        Vector3d kfd_rf {500, 500, 500};
+        Vector3d ktp_rf {600, 600, 600};
+        Vector3d ktd_rf {50, 50, 50};
+
+        Vector3d kfp_lf {4e4, 4e4, 4e4};
+        Vector3d kfd_lf {500, 500, 500};
+        Vector3d ktp_lf {600, 600, 600};
+        Vector3d ktd_lf {50, 50, 50};  
+
         Matrix3d Rsc_RF, Rsc_LF;
 
         Matrix3d Kp, Kd;

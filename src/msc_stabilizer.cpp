@@ -139,6 +139,16 @@ config.R << config.R.Zero();
 config.N_xu << config.N_xu.Zero();
 config.W << config.W.Zero();
 
+config.KFP_RF << config.KFP_RF.Zero(); 
+config.KFD_RF << config.KFD_RF.Zero();
+config.KTP_RF << config.KTP_RF.Zero();
+config.KTD_RF << config.KTD_RF.Zero();
+
+config.KFP_LF << config.KFP_LF.Zero();
+config.KFD_LF << config.KFD_LF.Zero();
+config.KTP_LF << config.KTP_LF.Zero();
+config.KTD_LF << config.KTD_LF.Zero();
+
 config.Q.block(0,0,3,3).diagonal() = config.qcom_p;
 config.Q.block(3,3,3,3).diagonal() = config.qcom_R;
 config.Q.block(6,6,3,3).diagonal() = config.qcom_vel;
@@ -162,17 +172,17 @@ config.W.block(15,15,3,3).diagonal() = config.wt_RF;
 config.W.block(24,24,3,3).diagonal() = config.wf_LF;
 config.W.block(27,27,3,3).diagonal() = config.wt_LF;
 
-config.KFP_RF << 4e4, 0, 0, 0, 4e4, 0, 0, 0, 4e4; 
-config.KFD_RF << 500, 0, 0, 0, 500, 0, 0, 0, 500; 
-config.KTP_RF << 600, 0, 0, 0, 600, 0, 0, 0, 600; 
-config.KTD_RF << 50, 0, 0, 0, 50, 0, 0, 0, 50; 
+config.KFP_RF.diagonal() = config.kfp_rf; 
+config.KFD_RF.diagonal() = config.kfd_rf; 
+config.KTP_RF.diagonal() = config.ktp_rf; 
+config.KTD_RF.diagonal() = config.ktd_rf; 
 
 config.Rsc_RF = robots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
 
-config.KFP_LF << 4e4, 0, 0, 0, 4e4, 0, 0, 0, 4e4; 
-config.KFD_LF << 500, 0, 0, 0, 500, 0, 0, 0, 500; 
-config.KTP_LF << 600, 0, 0, 0, 600, 0, 0, 0, 600;
-config.KTD_LF << 50, 0, 0, 0, 50, 0, 0, 0, 50; 
+config.KFP_LF.diagonal() = config.kfp_lf; 
+config.KFD_LF.diagonal() = config.kfd_lf; 
+config.KTP_LF.diagonal() = config.ktp_lf; 
+config.KTD_LF.diagonal() = config.ktd_lf; 
 
 config.Rsc_LF = robots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
 
@@ -215,6 +225,16 @@ config.W.block(12,12,3,3).diagonal() = config.wf_RF;
 config.W.block(15,15,3,3).diagonal() = config.wt_RF;
 config.W.block(24,24,3,3).diagonal() = config.wf_LF;
 config.W.block(27,27,3,3).diagonal() = config.wt_LF;
+
+config.KFP_RF.diagonal() = config.kfp_rf; 
+config.KFD_RF.diagonal() = config.kfd_rf; 
+config.KTP_RF.diagonal() = config.ktp_rf; 
+config.KTD_RF.diagonal() = config.ktd_rf; 
+
+config.KFP_LF.diagonal() = config.kfp_lf; 
+config.KFD_LF.diagonal() = config.kfd_lf; 
+config.KTP_LF.diagonal() = config.ktp_lf; 
+config.KTD_LF.diagonal() = config.ktd_lf; 
 
 }
 
