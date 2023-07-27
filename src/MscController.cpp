@@ -4,28 +4,29 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 : mc_control::fsm::Controller(rm, dt, config)
 {
   config_.load(config);
+
+  Activedof_ = config("active_dof");
   
   solver().addConstraintSet(kinematicsConstraint);
 
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e7);
-  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("base_link", robots(), robots().robot().robotIndex(), 0, 1e7);
+  baseTask_ = std::make_shared<mc_tasks::OrientationTask>("BODY", robots(), robots().robot().robotIndex(), 0, 1e7);
 
-  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
-  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("RLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("RLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e9);
 
-  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
-  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_R_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
+  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("LLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e9);
+  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("LLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e9);
 
-  rightHand_PosTask_ = std::make_shared<mc_tasks::PositionTask>("r_wrist", robots(), robots().robot().robotIndex(), 0, 1e9);
-  rightHand_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("r_wrist", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightHand_PosTask_ = std::make_shared<mc_tasks::PositionTask>("RARM_LINK7", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightHand_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("RARM_LINK7", robots(), robots().robot().robotIndex(), 0, 1e9);
 
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex())); 
 
   // Setting the anchor frame for the Kinematic Inertial estimator
 
-  double leftFootRatio = 0.5;
   datastore().make_call("KinematicAnchorFrame::" + robot().name(),
-                          [this, &leftFootRatio](const mc_rbdyn::Robot & robot)
+                          [this](const mc_rbdyn::Robot & robot)
                           {
                             return sva::interpolate(robot.surfacePose("LeftFoot"),
                                                     robot.surfacePose("RightFoot"),
@@ -189,11 +190,12 @@ bool MscController::run()
 
       }));
 
-    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The A, B and M Matrices", [this]() {
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check A, B, Q and R", [this]() {
       
-      mc_rtc::log::info("A = \n{}\n" , stab_->linearMatrix_.A);
-      mc_rtc::log::info("B = \n{}\n" , stab_->linearMatrix_.B);
-      mc_rtc::log::info("M = \n{}\n" , stab_->linearMatrix_.M);
+      mc_rtc::log::info("Matrix A = \n{}\n" , stab_->Ay);
+      mc_rtc::log::info("Matrix B = \n{}\n" , stab_->By);
+      mc_rtc::log::info("Matrix Q = \n{}\n" , stab_->Qy);
+      mc_rtc::log::info("Matrix R = \n{}\n" , stab_->config_.R);
 
       }));
 
@@ -214,9 +216,6 @@ bool MscController::run()
   gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Enable", [this]() {
     
     stabilizer = true;
-
-    solver().addTask(comTask_);
-    solver().addTask(baseTask_);
 
     solver().addTask(rightFoot_PosTask_);
     solver().addTask(rightFoot_OrTask_);
@@ -241,6 +240,7 @@ bool MscController::run()
     gui()->removeCategory({"Stabilizer","Tuning Q"});
     gui()->removeCategory({"Stabilizer","Tuning R"});
     gui()->removeCategory({"Stabilizer","Tuning W"});
+    gui()->removeCategory({"Stabilizer","Tuning Compliance"});
 
     removeContact({robot().name(), "ground", "RightFoot", "AllGround"});
     removeContact({robot().name(), "ground", "LeftFoot", "AllGround"});
@@ -373,6 +373,66 @@ bool MscController::run()
     mc_rtc::log::info("W = \n{}\n" , stab_->config_.W);
     }));
 
+// Configuration of the Stiffness and Damping of the Contacts GUI
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::Label("Configure Compliance:", []() { return "Set the Values corresponding to:"; }));
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Stiffness_RF", [this]() {
+    return stab_->config_.kfp_rf; }, [this](Eigen::Vector3d kfp_rf){ stab_->config_.kfp_rf = kfp_rf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Damping_RF", [this]() {
+    return stab_->config_.kfd_rf; }, [this](Eigen::Vector3d kfd_rf){ stab_->config_.kfd_rf = kfd_rf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Stiffness_RF", [this]() {
+    return stab_->config_.ktp_rf; }, [this](Eigen::Vector3d ktp_rf){ stab_->config_.ktp_rf = ktp_rf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Damping_RF", [this]() {
+    return stab_->config_.ktd_rf;  }, [this](Eigen::Vector3d ktd_rf){ stab_->config_.ktd_rf = ktd_rf; }));
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Stiffness_LF", [this]() {
+    return stab_->config_.kfp_lf; }, [this](Eigen::Vector3d kfp_lf){ stab_->config_.kfp_lf = kfp_lf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Damping_LF", [this]() {
+    return stab_->config_.kfd_lf; }, [this](Eigen::Vector3d kfd_lf){ stab_->config_.kfd_lf = kfd_lf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Stiffness_LF", [this]() {
+    return stab_->config_.ktp_lf; }, [this](Eigen::Vector3d ktp_lf){ stab_->config_.ktp_lf = ktp_lf; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Damping_LF", [this]() {
+    return stab_->config_.ktd_lf;  }, [this](Eigen::Vector3d ktd_lf){ stab_->config_.ktd_lf = ktd_lf; }));
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Stiffness_RH", [this]() {
+    return stab_->config_.kfp_rh; }, [this](Eigen::Vector3d kfp_rh){ stab_->config_.kfp_rh = kfp_rh; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Linear_Damping_RH", [this]() {
+    return stab_->config_.kfd_rh; }, [this](Eigen::Vector3d kfd_rh){ stab_->config_.kfd_rh = kfd_rh; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Stiffness_RH", [this]() {
+    return stab_->config_.ktp_rh; }, [this](Eigen::Vector3d ktp_rh){ stab_->config_.ktp_rh = ktp_rh; }));
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::ArrayInput("Angular_Damping_RH", [this]() {
+    return stab_->config_.ktd_rh;  }, [this](Eigen::Vector3d ktd_rh){ stab_->config_.ktd_rh = ktd_rh; }));
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::Button("Update", [this]() {
+    
+    stab_->reconfigure(stab_->config_);
+    stab_->linearMatrix_ = stab_->computeMatrix(stab_->x_ref_, stab_->config_);
+    stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_);
+
+    mc_rtc::log::info("The LQR Gain is Updated \n");
+
+    }));
+
+  gui()->addElement({"Stabilizer","Tuning Compliance"}, mc_rtc::gui::Button("Check Compliance", [this]() {
+    
+    mc_rtc::log::info("KFP_RF = \n{}\n" , stab_->config_.KFP_RF);
+    mc_rtc::log::info("KFD_RF = \n{}\n" , stab_->config_.KFD_RF);
+    mc_rtc::log::info("KTP_RF = \n{}\n" , stab_->config_.KTP_RF);
+    mc_rtc::log::info("KTD_RF = \n{}\n" , stab_->config_.KTD_RF);
+
+    mc_rtc::log::info("KFP_LF = \n{}\n" , stab_->config_.KFP_LF);
+    mc_rtc::log::info("KFD_LF = \n{}\n" , stab_->config_.KFD_LF);
+    mc_rtc::log::info("KTP_LF = \n{}\n" , stab_->config_.KTP_LF);
+    mc_rtc::log::info("KTD_LF = \n{}\n" , stab_->config_.KTD_LF);
+
+    mc_rtc::log::info("KFP_RH = \n{}\n" , stab_->config_.KFP_RH);
+    mc_rtc::log::info("KFD_RH = \n{}\n" , stab_->config_.KFD_RH);
+    mc_rtc::log::info("KTP_RH = \n{}\n" , stab_->config_.KTP_RH);
+    mc_rtc::log::info("KTD_RH = \n{}\n" , stab_->config_.KTD_RH);
+
+    }));
+
   flip = true;
    }
 
@@ -384,15 +444,13 @@ bool MscController::run()
   gui()->removeCategory({"Stabilizer","Tuning Q"});
   gui()->removeCategory({"Stabilizer","Tuning R"});
   gui()->removeCategory({"Stabilizer","Tuning W"});
+  gui()->removeCategory({"Stabilizer","Tuning Compliance"});
   gui()->removeCategory({"Stabilizer","Stop"});
 
 
   gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Disable", [this]() {
     
     stabilizer = false;
-
-    solver().removeTask(comTask_);
-    solver().removeTask(baseTask_);
 
     solver().removeTask(rightFoot_PosTask_);
     solver().removeTask(rightFoot_OrTask_);
@@ -525,6 +583,14 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   rightHand_PosTask_->reset();
   rightHand_OrTask_->reset();
 
+  // Add the CoM and Base Tasks permanently to not cause the drifting of the base of the robot when the controller is disabled
+
+  comTask_->selectActiveJoints(Activedof_);
+  baseTask_->selectActiveJoints(Activedof_);
+
+  solver().addTask(comTask_);
+  solver().addTask(baseTask_);
+
   const auto & observerp = observerPipeline(observerPipelineName_);
   
   if(observerp.success())
@@ -556,34 +622,34 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   // Plot related code in RViz
 
   using Color = mc_rtc::gui::Color;
+
   gui()->addPlot(
-      "Right Foot CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+      "Right Foot CoP_x(t)", mc_rtc::gui::plot::X("t",  [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoP(x)", [this]() { return realRobots().robot().cop("RightFoot").x(); }, Color::Blue));
 
   gui()->addPlot(
-      "Robot's CoM(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+      "Right Foot CoP_y(t)", mc_rtc::gui::plot::X("t",  [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "CoP(y)", [this]() { return realRobots().robot().cop("RightFoot").y(); }, Color::Blue));
+
+  gui()->addPlot(
+      "Robot's CoM_x(t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoM(x)", [this]() { return realRobots().robot().com().x(); }, Color::Red));
 
-/*   gui()->addPlot(
-      "Right Hand Normal Force (t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
+  gui()->addPlot(
+      "Robot's CoM_y(t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "CoM(y)", [this]() { return realRobots().robot().com().y(); }, Color::Red));
+
+   gui()->addPlot(
+      "Right Hand Force (t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "f_RH(z)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red), 
       mc_rtc::gui::plot::Y(
           "f_RH(x)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green),
       mc_rtc::gui::plot::Y(
-          "f_RH(y)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue));
-} */
-
-  gui()->addPlot(
-      "Right Hand Normal Force (t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
-      mc_rtc::gui::plot::Y(
-          "f_RH(x)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green));
-/* 
-  gui()->addPlot(
-      "Right Hand CoP(t)", mc_rtc::gui::plot::X({"t", {t_ + 0, t_ + 180}}, [this]() { return t_; }),
-      mc_rtc::gui::plot::Y(
-          "CoP(x)", [this]() { return realRobots().robot().cop("RightHand").x(); }, Color::Green)); */
+          "f_RH(y)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue)); 
 
 }

@@ -38,6 +38,10 @@ private:
     bool main = false;
     bool ref = false;
     bool compute = false;
+
+    // Ratio for the kinematic inertial
+    
+    double leftFootRatio = 0.5;
     
     Eigen::Vector6d dof, dof_full;
 
@@ -81,6 +85,10 @@ private:
 
     std::shared_ptr<mc_tasks::PositionTask> rightHand_PosTask_;
     std::shared_ptr<mc_tasks::OrientationTask> rightHand_OrTask_;
+
+    // Active Joints for the CoM and Base tasks
+
+    std::vector<std::string> Activedof_;
 
     // Observer Pipeline
     

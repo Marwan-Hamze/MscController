@@ -125,25 +125,25 @@ protected:
 
         Matrix<double, 48, 18> N_xu;
 
-        Vector3d qcom_p {1e11, 1e11, 1e11}; 
-        Vector3d qcom_R {3e10, 3e10, 3e10}; 
-        Vector3d qcom_vel {3e10, 3e10, 3e10}; 
-        Vector3d qcom_angvel {1e10, 1e10, 1e10}; 
+        Vector3d qcom_p {1, 1, 1}; 
+        Vector3d qcom_R {1, 1, 1}; 
+        Vector3d qcom_vel {1, 1, 1}; 
+        Vector3d qcom_angvel {1, 1, 1}; 
 
-        Vector3d qRF_p {1e11, 1e11, 1e11}; 
-        Vector3d qRF_R {1e12, 1e12, 1e12}; 
-        Vector3d qRF_vel {2e11, 2e11, 2e11}; 
-        Vector3d qRF_angvel {1e12, 1e12, 1e12}; 
+        Vector3d qRF_p {1e4, 1e4, 1e4}; 
+        Vector3d qRF_R {1e4, 1e4, 1e4}; 
+        Vector3d qRF_vel {3e2, 3e2, 3e2}; 
+        Vector3d qRF_angvel {3e2, 3e2, 3e2}; 
 
-        Vector3d qLF_p {1e11, 1e11, 1e11};  
-        Vector3d qLF_R {1e12, 1e12, 1e12}; 
-        Vector3d qLF_vel {2e11, 2e11, 2e11};  
-        Vector3d qLF_angvel {1e12, 1e12, 1e12}; 
+        Vector3d qLF_p {1e4, 1e4, 1e4};  
+        Vector3d qLF_R {1e4, 1e4, 1e4}; 
+        Vector3d qLF_vel {3e2, 3e2, 3e2};  
+        Vector3d qLF_angvel {3e2, 3e2, 3e2}; 
 
-        Vector3d qRH_p {3e12, 3e12, 3e12}; 
-        Vector3d qRH_R {3e12, 3e12, 3e12}; 
-        Vector3d qRH_vel {1e13, 1e13, 1e13}; 
-        Vector3d qRH_angvel {3e12, 3e12, 3e12}; 
+        Vector3d qRH_p {1e4, 1e4, 1e4}; 
+        Vector3d qRH_R {1e4, 1e4, 1e4}; 
+        Vector3d qRH_vel {3e2, 3e2, 3e2}; 
+        Vector3d qRH_angvel {3e2, 3e2, 3e2}; 
 
         Vector3d rRF_lacc {1, 1, 1};
         Vector3d rRF_aacc {1, 1, 1};
@@ -152,17 +152,32 @@ protected:
         Vector3d rRH_lacc {1, 1, 1};
         Vector3d rRH_aacc {1, 1, 1};
 
-        Vector3d wf_RF {0.95, 0.95, 0.95}; 
-        Vector3d wt_RF {0.95, 0.95, 0.95}; 
-        Vector3d wf_LF {0.95, 0.95, 0.95}; 
-        Vector3d wt_LF {0.95, 0.95, 0.95}; 
-        Vector3d wf_RH {0.95, 0.95, 0.95};
-        Vector3d wt_RH {0.95, 0.95, 0.95};
+        Vector3d wf_RF {0, 0, 0}; 
+        Vector3d wt_RF {0, 0, 0}; 
+        Vector3d wf_LF {0, 0, 0}; 
+        Vector3d wt_LF {0, 0, 0}; 
+        Vector3d wf_RH {0, 0, 0};
+        Vector3d wt_RH {0, 0, 0};
 
         Matrix3d KFP_RF, KFP_LF, KFP_RH;
         Matrix3d KFD_RF, KFD_LF, KFD_RH;
         Matrix3d KTP_RF, KTP_LF, KTP_RH;
         Matrix3d KTD_RF, KTD_LF, KTD_RH;
+
+        Vector3d kfp_rf {4e4, 4e4, 4e4};
+        Vector3d kfd_rf {500, 500, 500};
+        Vector3d ktp_rf {1000, 1000, 1000};
+        Vector3d ktd_rf {50, 50, 50};
+
+        Vector3d kfp_lf {4e4, 4e4, 4e4};
+        Vector3d kfd_lf {500, 500, 500};
+        Vector3d ktp_lf {1000, 1000, 1000};
+        Vector3d ktd_lf {50, 50, 50};  
+
+        Vector3d kfp_rh {4e4, 4e4, 4e4};
+        Vector3d kfd_rh {500, 500, 500};
+        Vector3d ktp_rh {1000, 1000, 1000};
+        Vector3d ktd_rh {50, 50, 50};
 
         Matrix3d Rsc_RF, Rsc_LF, Rsc_RH;
 
@@ -261,8 +276,6 @@ public:
 
     linearMatrix linearMatrix_;
 
-private:
-
     // Definition of the Modified Linear Matrices after the trade-off between the state and force errors
 
     Matrix<double, 48, 48> Ay;
@@ -270,6 +283,8 @@ private:
     Matrix<double, 48, 48> Qy;
 
     Matrix<double, 48, 48> N;
+
+private:
 
     // Definition of sub-Matrices to simplify the expression of the Control Matrices 
 

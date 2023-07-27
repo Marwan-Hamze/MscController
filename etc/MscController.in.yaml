@@ -35,23 +35,17 @@ constraints:
 collisions:
 - type: collision
   useMinimal: true
-#- type: collision
-#  r1: hrp4
-#  r2: tilted_board
-#  collisions:
-#    - body1: L_WRIST_Y_LINK
-#      body2: ground
-#      iDist: 0.5
-#      sDist: 0.02
-#      damping: 0.0
+- type: collision
+  r1: hrp2_drc
+  r2: tilted_board
 # Initial set of contacts
 contacts:
-- r1: hrp4
+- r1: hrp2_drc
   r2: ground
   r1Surface: LeftFoot
   r2Surface: AllGround
   dof: [1,1,1,1,1,1]
-- r1: hrp4
+- r1: hrp2_drc
   r2: ground
   r1Surface: RightFoot
   r2Surface: AllGround
@@ -60,13 +54,17 @@ contacts:
       #[0,0,0,0,0,0]
 
 # Some options for a specific robot
-hrp4:
+hrp2_drc:
   posture:
     stiffness: 1
     weight: 1
   #ff:
     #stiffness: 2
     #weight: 100
+
+active_dof: ["Root", "LLEG_JOINT0", "LLEG_JOINT1", "LLEG_JOINT2", "LLEG_JOINT3", "LLEG_JOINT4", "LLEG_JOINT5", 
+                      "RLEG_JOINT0", "RLEG_JOINT1", "RLEG_JOINT2", "RLEG_JOINT3", "RLEG_JOINT4", "RLEG_JOINT5",
+                      "RARM_JOINT1", "RARM_JOINT2", "RARM_JOINT3", "RARM_JOINT4", "RARM_JOINT5", "RARM_JOINT6"]
 
 # Implement some additional text states
 states:
@@ -81,12 +79,12 @@ states:
         stiffness: 5
       KeepTorso:
         type: orientation
-        body: torso
+        body: CHEST_LINK1
         weight: 1000
         stiffness: 1
       KeepBase:
         type: orientation
-        body: base_link
+        body: BODY
         weight: 1000
         stiffness: 1
   
@@ -111,14 +109,14 @@ states:
       RightHandTrajectory:
         type: bspline_trajectory
         setupMode: false
-        surface: RightHand
+        surface: InternRightHand
         weight: 1000
         stiffness: 50
         duration: 5.0
         dimWeight: [1, 1, 1, 1, 0.5, 0.5]
         displaySamples: 100
         target:
-          translation: [0.3, -0.35, 0.95]
+          translation: [0.3, -0.35, 1.1]
           rotation: [-0.908, 0.0, 1.57]
         controlPoints: [[0.0, -0.5, 0.85]]
         oriWaypoints: [3.5, [-0.785, 0.0, 1.57]]
@@ -133,15 +131,15 @@ states:
 #        move_com: [0.05, 0, 0] 
     # Only allow motion along hand's z axis
     AddContacts:
-      - r1: hrp4
+      - r1: hrp2_drc
         r2: tilted_board  
-        r1Surface: RightHand
+        r1Surface: InternRightHand
         r2Surface: AllGround
-        dof: [0, 0, 1, 1, 1, 0]
+        dof: [0, 0, 0, 0, 0, 0]
     tasks:
       RightHandContactConstantVelocity:
         type: surfaceTransform
-        surface: RightHand
+        surface: InternRightHand
         refVel: [0,0,0,0,0,-0.03]
         stiffness: 1
         damping: 300
@@ -149,28 +147,28 @@ states:
         completion:
           wrench:
             couple: [.NaN, .NaN, .NaN]
-            force: [.NaN, .NaN, 20.0]
+            force: [.NaN, .NaN, 10.0]
   
   RightHand::Contact:
     base: StandingBase
     AddContacts:
-      - r1: hrp4
+      - r1: hrp2_drc
         r2: tilted_board
-        r1Surface: RightHand
+        r1Surface: InternRightHand
         r2Surface: AllGround
         dof: [0, 0, 0, 0, 0, 0]
 
   RightHandMoveBack:
     base: MetaTasks
     RemoveContacts:
-      - r1: hrp4
+      - r1: hrp2_drc
         r2: tilted_board
-        r1Surface: RightHand
+        r1Surface: InternRightHand
         r2Surface: AllGround
     tasks:
       MoveRightHand:
        type: surfaceTransform
-       surface: RightHand
+       surface: InternRightHand
        refVel: [0,0,0,0,0, 0.02]
        stiffness: 3.0
        damping: 50
@@ -228,6 +226,9 @@ ObserverPipelines:
     - type: Encoder
     - type: Attitude
       required: false
+      config:
+        KalmanFilter:
+          gyr_cov: 0.000001
     - type: KinematicInertial
       config:
         anchorFrame:
