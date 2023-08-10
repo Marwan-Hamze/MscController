@@ -20,11 +20,13 @@ VerboseStateFactory: false
 robots:
   ground:
     module: env/ground
-  tilted_board:
+  wall:
     module: env/ground
     init_pos:
-      translation: [7.4, 0.0, 7.8]
-      rotation: [0.0, -0.80, 0.0]
+      # The wall position is put 5cm in front of choreonoid's one to
+      # demonstrate updating it using kinematics information in UpdateWallFromKinematics state
+      translation: [0.50, 0.0, 0.0]
+      rotation: [0.0, -1.57, 0.0]
 # General constraints, always on
 constraints:
 - type: contact
@@ -37,7 +39,7 @@ collisions:
   useMinimal: true
 - type: collision
   r1: hrp2_drc
-  r2: tilted_board
+  r2: wall
 # Initial set of contacts
 contacts:
 - r1: hrp2_drc
@@ -75,7 +77,7 @@ states:
       CoM:
         type: com
         above: [LeftFoot, RightFoot]      
-        weight: 2000
+        weight: 1000
         stiffness: 5
       KeepTorso:
         type: orientation
@@ -109,15 +111,15 @@ states:
       RightHandTrajectory:
         type: bspline_trajectory
         setupMode: false
-        surface: InternRightHand
+        surface: RightGripper
         weight: 1000
         stiffness: 50
         duration: 5.0
         dimWeight: [1, 1, 1, 1, 0.5, 0.5]
         displaySamples: 100
         target:
-          translation: [0.3, -0.35, 1.1]
-          rotation: [-0.908, 0.0, 1.57]
+          translation: [0.3, -0.35, 1]
+          rotation: [0.0, -1.57, 0.0]
         controlPoints: [[0.0, -0.5, 0.85]]
         oriWaypoints: [3.5, [-0.785, 0.0, 1.57]]
         completion:
@@ -125,21 +127,21 @@ states:
 
 # Right Hand reaching the table and making contact
   RightHand::ContactWithConstantVel:
-    base: MoveCoM
+    base: StandingBase
 #    config:
 #      CoM:
 #        move_com: [0.05, 0, 0] 
     # Only allow motion along hand's z axis
     AddContacts:
       - r1: hrp2_drc
-        r2: tilted_board  
-        r1Surface: InternRightHand
+        r2: wall  
+        r1Surface: RightGripper
         r2Surface: AllGround
         dof: [0, 0, 0, 0, 0, 0]
     tasks:
       RightHandContactConstantVelocity:
         type: surfaceTransform
-        surface: InternRightHand
+        surface: RightGripper
         refVel: [0,0,0,0,0,-0.03]
         stiffness: 1
         damping: 300
@@ -147,14 +149,14 @@ states:
         completion:
           wrench:
             couple: [.NaN, .NaN, .NaN]
-            force: [.NaN, .NaN, 10.0]
+            force: [.NaN, .NaN, 20.0]
   
   RightHand::Contact:
     base: StandingBase
     AddContacts:
       - r1: hrp2_drc
-        r2: tilted_board
-        r1Surface: InternRightHand
+        r2: wall
+        r1Surface: RightGripper
         r2Surface: AllGround
         dof: [0, 0, 0, 0, 0, 0]
 
@@ -162,13 +164,13 @@ states:
     base: MetaTasks
     RemoveContacts:
       - r1: hrp2_drc
-        r2: tilted_board
-        r1Surface: InternRightHand
+        r2: wall
+        r1Surface: RightGripper
         r2Surface: AllGround
     tasks:
       MoveRightHand:
        type: surfaceTransform
-       surface: InternRightHand
+       surface: RightGripper
        refVel: [0,0,0,0,0, 0.02]
        stiffness: 3.0
        damping: 50
