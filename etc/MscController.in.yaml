@@ -38,16 +38,16 @@ collisions:
 - type: collision
   useMinimal: true
 - type: collision
-  r1: hrp2_drc
+  r1: rhp7
   r2: wall
 # Initial set of contacts
 contacts:
-- r1: hrp2_drc
+- r1: rhp7
   r2: ground
   r1Surface: LeftFoot
   r2Surface: AllGround
   dof: [1,1,1,1,1,1]
-- r1: hrp2_drc
+- r1: rhp7
   r2: ground
   r1Surface: RightFoot
   r2Surface: AllGround
@@ -56,7 +56,7 @@ contacts:
       #[0,0,0,0,0,0]
 
 # Some options for a specific robot
-hrp2_drc:
+rhp7:
   posture:
     stiffness: 1
     weight: 1
@@ -64,9 +64,9 @@ hrp2_drc:
     #stiffness: 2
     #weight: 100
 
-active_dof: ["Root", "LLEG_JOINT0", "LLEG_JOINT1", "LLEG_JOINT2", "LLEG_JOINT3", "LLEG_JOINT4", "LLEG_JOINT5", 
-                      "RLEG_JOINT0", "RLEG_JOINT1", "RLEG_JOINT2", "RLEG_JOINT3", "RLEG_JOINT4", "RLEG_JOINT5",
-                      "RARM_JOINT1", "RARM_JOINT2", "RARM_JOINT3", "RARM_JOINT4", "RARM_JOINT5", "RARM_JOINT6"]
+active_dof: ["Root", "L_CROTCH_Y", "L_CROTCH_R", "L_CROTCH_P", "L_KNEE_P", "L_ANKLE_R", "L_ANKLE_P", 
+                      "R_CROTCH_Y", "R_CROTCH_R", "R_CROTCH_P", "R_KNEE_P", "R_ANKLE_R", "R_ANKLE_P", 
+                      "R_SHOULDER_P", "R_SHOULDER_R", "R_ELBOW_Y", "R_ELBOW_P", "R_WRIST_Y", "R_WRIST_P"]
 
 # Implement some additional text states
 states:
@@ -81,7 +81,7 @@ states:
         stiffness: 5
       KeepTorso:
         type: orientation
-        body: CHEST_LINK1
+        body: CHEST_P_LINK
         weight: 1000
         stiffness: 1
       KeepBase:
@@ -111,15 +111,15 @@ states:
       RightHandTrajectory:
         type: bspline_trajectory
         setupMode: false
-        surface: RightGripper
+        surface: RightHand
         weight: 1000
         stiffness: 50
         duration: 5.0
         dimWeight: [1, 1, 1, 1, 0.5, 0.5]
         displaySamples: 100
         target:
-          translation: [0.3, -0.35, 1]
-          rotation: [0.0, -1.57, 0.0]
+          translation: [0.35, -0.35, 1]
+          rotation: [0.0, -0.785, 0.0]
         controlPoints: [[0.0, -0.5, 0.85]]
         oriWaypoints: [3.5, [-0.785, 0.0, 1.57]]
         completion:
@@ -133,44 +133,44 @@ states:
 #        move_com: [0.05, 0, 0] 
     # Only allow motion along hand's z axis
     AddContacts:
-      - r1: hrp2_drc
+      - r1: rhp7
         r2: wall  
-        r1Surface: RightGripper
+        r1Surface: RightHand
         r2Surface: AllGround
         dof: [0, 0, 0, 0, 0, 0]
     tasks:
       RightHandContactConstantVelocity:
         type: surfaceTransform
-        surface: RightGripper
-        refVel: [0,0,0,0,0,-0.03]
+        surface: RightHand
+        refVel: [0,0,0,0.03,0,0]
         stiffness: 1
         damping: 300
         weight: 800
         completion:
           wrench:
             couple: [.NaN, .NaN, .NaN]
-            force: [.NaN, .NaN, 20.0]
+            force: [.NaN, 10.0, .NaN]
   
   RightHand::Contact:
     base: StandingBase
     AddContacts:
-      - r1: hrp2_drc
+      - r1: rhp7
         r2: wall
-        r1Surface: RightGripper
+        r1Surface: RightHand
         r2Surface: AllGround
         dof: [0, 0, 0, 0, 0, 0]
 
   RightHandMoveBack:
     base: MetaTasks
     RemoveContacts:
-      - r1: hrp2_drc
+      - r1: rhp7
         r2: wall
-        r1Surface: RightGripper
+        r1Surface: RightHand
         r2Surface: AllGround
     tasks:
       MoveRightHand:
        type: surfaceTransform
-       surface: RightGripper
+       surface: RightHand
        refVel: [0,0,0,0,0, 0.02]
        stiffness: 3.0
        damping: 50

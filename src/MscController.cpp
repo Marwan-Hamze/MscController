@@ -12,14 +12,14 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   comTask_ = std::make_shared<mc_tasks::CoMTask>(robots(), robots().robot().robotIndex(), 0, 1e7);
   baseTask_ = std::make_shared<mc_tasks::OrientationTask>("BODY", robots(), robots().robot().robotIndex(), 0, 1e7);
 
-  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("RLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e9);
-  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("RLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_ANKLE_P_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_ANKLE_P_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
 
-  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("LLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e9);
-  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("LLEG_LINK5", robots(), robots().robot().robotIndex(), 0, 1e9);
+  leftFoot_PosTask_ = std::make_shared<mc_tasks::PositionTask>("L_ANKLE_P_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
+  leftFoot_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("L_ANKLE_P_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
 
-  rightHand_PosTask_ = std::make_shared<mc_tasks::PositionTask>("RARM_LINK7", robots(), robots().robot().robotIndex(), 0, 1e9);
-  rightHand_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("RARM_LINK7", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightHand_PosTask_ = std::make_shared<mc_tasks::PositionTask>("R_HAND_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
+  rightHand_OrTask_ = std::make_shared<mc_tasks::OrientationTask>("R_HAND_LINK", robots(), robots().robot().robotIndex(), 0, 1e9);
 
   stab_.reset(new msc_stabilizer::Stabilizer(robots(), realRobots(), robots().robot().robotIndex())); 
 

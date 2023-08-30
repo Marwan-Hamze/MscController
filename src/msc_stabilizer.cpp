@@ -189,21 +189,21 @@ config.KFD_RF.diagonal() = config.kfd_rf;
 config.KTP_RF.diagonal() = config.ktp_rf; 
 config.KTD_RF.diagonal() = config.ktd_rf; 
 
-config.Rsc_RF = robots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
+config.Rsc_RF = robots.robot().bodyPosW("R_ANKLE_P_LINK").rotation().transpose();
 
 config.KFP_LF.diagonal() = config.kfp_lf; 
 config.KFD_LF.diagonal() = config.kfd_lf; 
 config.KTP_LF.diagonal() = config.ktp_lf; 
 config.KTD_LF.diagonal() = config.ktd_lf; 
 
-config.Rsc_LF = robots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
+config.Rsc_LF = robots.robot().bodyPosW("L_ANKLE_P_LINK").rotation().transpose();
 
 config.KFP_RH.diagonal() = config.kfp_rh; 
 config.KFD_RH.diagonal() = config.kfd_rh; 
 config.KTP_RH.diagonal() = config.ktp_rh; 
 config.KTD_RH.diagonal() = config.ktd_rh; 
 
-config.Rsc_RH = robots.robot().bodyPosW("RARM_LINK7").rotation().transpose();
+config.Rsc_RH = robots.robot().bodyPosW("R_HAND_LINK").rotation().transpose();
 
 config.Kp << 100, 0, 0, 0, 100, 0, 0, 0, 100;
 config.Kd << 30, 0, 0, 0, 30, 0, 0, 0, 30;
@@ -277,20 +277,20 @@ Vector3d pc_1, pc_d_1, oc_d_1, pc_2, pc_d_2, oc_d_2, pc_3, pc_d_3, oc_d_3;
 
 R = robots.robot().posW().rotation().transpose();
 
-pc_1 = robots.robot().bodyPosW("RLEG_LINK5").translation();
-Rc_1 = robots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
-pc_d_1 = robots.robot().bodyVelW("RLEG_LINK5").linear();
-oc_d_1 = robots.robot().bodyVelW("RLEG_LINK5").angular();
+pc_1 = robots.robot().bodyPosW("R_ANKLE_P_LINK").translation();
+Rc_1 = robots.robot().bodyPosW("R_ANKLE_P_LINK").rotation().transpose();
+pc_d_1 = robots.robot().bodyVelW("R_ANKLE_P_LINK").linear();
+oc_d_1 = robots.robot().bodyVelW("R_ANKLE_P_LINK").angular();
 
-pc_2 = robots.robot().bodyPosW("LLEG_LINK5").translation();
-Rc_2 = robots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
-pc_d_2 = robots.robot().bodyVelW("LLEG_LINK5").linear();
-oc_d_2 = robots.robot().bodyVelW("LLEG_LINK5").angular();
+pc_2 = robots.robot().bodyPosW("L_ANKLE_P_LINK").translation();
+Rc_2 = robots.robot().bodyPosW("L_ANKLE_P_LINK").rotation().transpose();
+pc_d_2 = robots.robot().bodyVelW("L_ANKLE_P_LINK").linear();
+oc_d_2 = robots.robot().bodyVelW("L_ANKLE_P_LINK").angular();
 
-pc_3 = robots.robot().bodyPosW("RARM_LINK7").translation();
-Rc_3 = robots.robot().bodyPosW("RARM_LINK7").rotation().transpose();
-pc_d_3 = robots.robot().bodyVelW("RARM_LINK7").linear();
-oc_d_3 = robots.robot().bodyVelW("RARM_LINK7").angular();
+pc_3 = robots.robot().bodyPosW("R_HAND_LINK").translation();
+Rc_3 = robots.robot().bodyPosW("R_HAND_LINK").rotation().transpose();
+pc_d_3 = robots.robot().bodyVelW("R_HAND_LINK").linear();
+oc_d_3 = robots.robot().bodyVelW("R_HAND_LINK").angular();
 
 x_ref.CoM.pos = robots.robot().com();
 x_ref.CoM.R = robots.robot().posW().rotation().transpose();
@@ -330,29 +330,29 @@ feedback feedback;
 
 Matrix3d Rc_1_real, Rc_2_real, Rc_3_real;
 
-Rc_1_real = realRobots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
-Rc_2_real = realRobots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
-Rc_3_real = realRobots.robot().bodyPosW("RARM_LINK7").rotation().transpose();
+Rc_1_real = realRobots.robot().bodyPosW("R_ANKLE_P_LINK").rotation().transpose();
+Rc_2_real = realRobots.robot().bodyPosW("L_ANKLE_P_LINK").rotation().transpose();
+Rc_3_real = realRobots.robot().bodyPosW("R_HAND_LINK").rotation().transpose();
 
 feedback.CoM.pos = robots.robot().com();
 feedback.CoM.R = robots.robot().posW().rotation().transpose();
 feedback.CoM.vel = robots.robot().comVelocity();    
 feedback.CoM.angvel = robots.robot().bodyVelW("BODY").angular();
 
-feedback.pc_1 = robots.robot().bodyPosW("RLEG_LINK5").translation();
-feedback.Rc_1 = robots.robot().bodyPosW("RLEG_LINK5").rotation().transpose();
-feedback.pc_d_1 = robots.robot().bodyVelW("RLEG_LINK5").linear();
-feedback.oc_d_1 = robots.robot().bodyVelW("RLEG_LINK5").angular();
+feedback.pc_1 = robots.robot().bodyPosW("R_ANKLE_P_LINK").translation();
+feedback.Rc_1 = robots.robot().bodyPosW("R_ANKLE_P_LINK").rotation().transpose();
+feedback.pc_d_1 = robots.robot().bodyVelW("R_ANKLE_P_LINK").linear();
+feedback.oc_d_1 = robots.robot().bodyVelW("R_ANKLE_P_LINK").angular();
 
-feedback.pc_2 = robots.robot().bodyPosW("LLEG_LINK5").translation();
-feedback.Rc_2 = robots.robot().bodyPosW("LLEG_LINK5").rotation().transpose();
-feedback.pc_d_2 = robots.robot().bodyVelW("LLEG_LINK5").linear();
-feedback.oc_d_2 = robots.robot().bodyVelW("LLEG_LINK5").angular();
+feedback.pc_2 = robots.robot().bodyPosW("L_ANKLE_P_LINK").translation();
+feedback.Rc_2 = robots.robot().bodyPosW("L_ANKLE_P_LINK").rotation().transpose();
+feedback.pc_d_2 = robots.robot().bodyVelW("L_ANKLE_P_LINK").linear();
+feedback.oc_d_2 = robots.robot().bodyVelW("L_ANKLE_P_LINK").angular();
 
-feedback.pc_3 = robots.robot().bodyPosW("RARM_LINK7").translation();
-feedback.Rc_3 = robots.robot().bodyPosW("RARM_LINK7").rotation().transpose();
-feedback.pc_d_3 = robots.robot().bodyVelW("RARM_LINK7").linear();
-feedback.oc_d_3 = robots.robot().bodyVelW("RARM_LINK7").angular();
+feedback.pc_3 = robots.robot().bodyPosW("R_HAND_LINK").translation();
+feedback.Rc_3 = robots.robot().bodyPosW("R_HAND_LINK").rotation().transpose();
+feedback.pc_d_3 = robots.robot().bodyVelW("R_HAND_LINK").linear();
+feedback.oc_d_3 = robots.robot().bodyVelW("R_HAND_LINK").angular();
 
 feedback.x.CoM.pos = realRobots.robot().com();
 feedback.x.CoM.R = realRobots.robot().posW().rotation().transpose();
