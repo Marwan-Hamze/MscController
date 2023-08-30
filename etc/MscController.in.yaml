@@ -82,12 +82,12 @@ states:
       KeepTorso:
         type: orientation
         body: CHEST_P_LINK
-        weight: 1000
+        weight: 500
         stiffness: 1
       KeepBase:
         type: orientation
         body: BODY
-        weight: 1000
+        weight: 500
         stiffness: 1
   
   #Move the CoM to the front
@@ -118,8 +118,8 @@ states:
         dimWeight: [1, 1, 1, 1, 0.5, 0.5]
         displaySamples: 100
         target:
-          translation: [0.35, -0.35, 1]
-          rotation: [0.0, -0.785, 0.0]
+          translation: [0.35, -0.2, 1]
+          rotation: [0.0, -0.85, 0.0]
         controlPoints: [[0.0, -0.5, 0.85]]
         oriWaypoints: [3.5, [-0.785, 0.0, 1.57]]
         completion:
@@ -132,24 +132,24 @@ states:
 #      CoM:
 #        move_com: [0.05, 0, 0] 
     # Only allow motion along hand's z axis
-    AddContacts:
-      - r1: rhp7
-        r2: wall  
-        r1Surface: RightHand
-        r2Surface: AllGround
-        dof: [0, 0, 0, 0, 0, 0]
+#    AddContacts:
+#      - r1: rhp7
+#        r2: wall  
+#        r1Surface: RightHand
+#        r2Surface: AllGround
+#        dof: [0, 0, 0, 0, 0, 0]
     tasks:
       RightHandContactConstantVelocity:
         type: surfaceTransform
         surface: RightHand
-        refVel: [0,0,0,0.03,0,0]
+        refVel: [0.03,0,0,0.03,0,0]
         stiffness: 1
         damping: 300
         weight: 800
         completion:
           wrench:
             couple: [.NaN, .NaN, .NaN]
-            force: [.NaN, 10.0, .NaN]
+            force: [.NaN, 20.0, .NaN]
   
   RightHand::Contact:
     base: StandingBase
