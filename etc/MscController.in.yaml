@@ -104,7 +104,7 @@ states:
 #        completion:
 #          eval: 0.001
   
-  # Trajectory to bring the right hand close to the table
+  # Trajectory to bring the right hand close to the wall
   RightHandToWall:
     base: StandingBase
     tasks:
