@@ -104,6 +104,8 @@ states:
 #        completion:
 #          eval: 0.001
   
+  # Moving the CoM above the right foot
+
   # Trajectory to bring the right hand close to the wall
   RightHandToWall:
     base: StandingBase
