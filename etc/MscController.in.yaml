@@ -91,6 +91,11 @@ states:
 
   MoveLeftFoot:
     base: AboveRightFoot
+    RemoveContacts:
+      - r1: hrp2_drc
+        r2: ground
+        r1Surface: LeftFoot
+        r2Surface: AllGround
     tasks:
       LiftFootTask:
         type: bspline_trajectory
