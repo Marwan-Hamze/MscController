@@ -65,18 +65,17 @@ hrp2_drc:
     #weight: 100
 
 active_dof: ["Root", "LLEG_JOINT0", "LLEG_JOINT1", "LLEG_JOINT2", "LLEG_JOINT3", "LLEG_JOINT4", "LLEG_JOINT5", 
-                      "RLEG_JOINT0", "RLEG_JOINT1", "RLEG_JOINT2", "RLEG_JOINT3", "RLEG_JOINT4", "RLEG_JOINT5",
-                      "RARM_JOINT1", "RARM_JOINT2", "RARM_JOINT3", "RARM_JOINT4", "RARM_JOINT5", "RARM_JOINT6"]
+                      "RLEG_JOINT0", "RLEG_JOINT1", "RLEG_JOINT2", "RLEG_JOINT3", "RLEG_JOINT4", "RLEG_JOINT5"]
 
 # Implement some additional text states
 states:
   # Keep the CoM centered between the feet, and the chest and base upright
-  StandingBase:
+  AboveRightFoot:
     base: MetaTasks
     tasks:
       CoM:
         type: com
-        above: [LeftFoot, RightFoot]      
+        above: RightFoot     
         weight: 1000
         stiffness: 5
       KeepTorso:
@@ -89,22 +88,27 @@ states:
         body: BODY
         weight: 1000
         stiffness: 1
-  
-  #Move the CoM to the front
-  MoveCoM:
-    base: MetaTasks
+
+  MoveLeftFoot:
+    base: AboveRightFoot
     tasks:
-      CoM:
-        type: com
-        above: [LeftFoot, RightFoot]
-        move_com: [0.04, 0, 0]        
-        weight: 2000
-        stiffness: 5
-#        duration: 4.0
-#        completion:
-#          eval: 0.001
-  
-  # Moving the CoM above the right foot
+      LiftFootTask:
+        type: bspline_trajectory
+        stiffness: 50.0
+        weight: 500.0
+        duration: 3.0
+        surface: LeftFoot
+        completion:
+          timeElapsed: true
+        # XXX would be nicer to target a surface on the environment
+        target:
+          translation: [0.017046, 0.25, 0.1]
+          rotation: [0.523, 0.0, 0.0]
+        controlPoints:
+          - [0.017046, 0.08, 0.002]
+          - [0.017046, 0.1, 0.08]
+          - [0.017046, 0.12, 0.15]
+
 
   # Trajectory to bring the right hand close to the wall
   RightHandToWall:
@@ -211,14 +215,15 @@ states:
 
 # Transitions map
 transitions:
-- [MscController_Initial,                        OK, RightHandToWall, Auto]
-- [RightHandToWall,                              OK, RightHand::ContactWithConstantVel, Auto]
-- [RightHand::ContactWithConstantVel,            OK, RightHand::Contact, Auto]
-- [RightHand::Contact,                           OK, RemoveHand, Auto]
-#- [RightHand::Contact,                           OK, MoveCoM, Auto]
-#- [MoveCoM,                                      OK, RemoveHand, Auto]
-- [RemoveHand,                                   OK, RightHand::Remove, Auto]
-- [RightHand::Remove,                            OK, StandingHalfSitting, Auto]
+- [MscController_Initial,                        OK, MoveLeftFoot, Auto]
+- [MoveLeftFoot,                                 OK, RemoveHand, Auto]
+# - [RightHandToWall,                              OK, RightHand::ContactWithConstantVel, Auto]
+# - [RightHand::ContactWithConstantVel,            OK, RightHand::Contact, Auto]
+# - [RightHand::Contact,                           OK, RemoveHand, Auto]
+# #- [RightHand::Contact,                           OK, MoveCoM, Auto]
+# #- [MoveCoM,                                      OK, RemoveHand, Auto]
+# - [RemoveHand,                                   OK, RightHand::Remove, Auto]
+# - [RightHand::Remove,                            OK, StandingHalfSitting, Auto]
 
 # Initial state
 init: MscController_Initial

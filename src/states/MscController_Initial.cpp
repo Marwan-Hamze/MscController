@@ -8,7 +8,7 @@ void MscController_Initial::configure(const mc_rtc::Configuration & config)
 
 void MscController_Initial::start(mc_control::fsm::Controller & ctl_)
 {
-    ctl_.gui()->addElement({"Stabilizer","FSM"}, mc_rtc::gui::Button("Move Right Hand", [this]() { start_ = true; }));
+    ctl_.gui()->addElement({"Stabilizer","FSM"}, mc_rtc::gui::Button("Move Left Foot", [this]() { start_ = true; }));
 
 }
 
@@ -25,7 +25,7 @@ bool MscController_Initial::run(mc_control::fsm::Controller & ctl_)
 void MscController_Initial::teardown(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<MscController &>(ctl_);
-  ctl_.gui()->removeElement({"Stabilizer","FSM"},"Move Right Hand");
+  ctl_.gui()->removeElement({"Stabilizer","FSM"},"Moved Left Foot");
 }
 
 EXPORT_SINGLE_STATE("MscController_Initial", MscController_Initial)
