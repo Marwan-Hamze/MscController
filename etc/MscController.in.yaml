@@ -23,10 +23,13 @@ robots:
   wall:
     module: env/ground
     init_pos:
-      # The wall position is put 5cm in front of choreonoid's one to
-      # demonstrate updating it using kinematics information in UpdateWallFromKinematics state
       translation: [0.50, 0.0, 0.0]
       rotation: [0.0, -1.57, 0.0]
+  slope:
+    module: env/ground
+    init_pos:
+      translation: [0.0, 0.2, 0.0]
+      rotation: [0.523, 0.0, 0.0]
 # General constraints, always on
 constraints:
 - type: contact
@@ -70,7 +73,7 @@ active_dof: ["Root", "LLEG_JOINT0", "LLEG_JOINT1", "LLEG_JOINT2", "LLEG_JOINT3",
 # Implement some additional text states
 states:
   # Keep the CoM centered between the feet, and the chest and base upright
-  AboveRightFoot:
+  Standing:
     base: MetaTasks
     tasks:
       CoM:
@@ -90,7 +93,7 @@ states:
         stiffness: 1
 
   MoveLeftFoot:
-    base: AboveRightFoot
+    base: Standing
     RemoveContacts:
       - r1: hrp2_drc
         r2: ground
@@ -101,11 +104,10 @@ states:
         type: bspline_trajectory
         stiffness: 50.0
         weight: 500.0
-        duration: 3.0
+        duration: 4.0
         surface: LeftFoot
         completion:
           timeElapsed: true
-        # XXX would be nicer to target a surface on the environment
         target:
           translation: [0.017046, 0.25, 0.1]
           rotation: [0.523, 0.0, 0.0]
@@ -113,115 +115,130 @@ states:
           - [0.017046, 0.08, 0.002]
           - [0.017046, 0.1, 0.08]
           - [0.017046, 0.12, 0.15]
+ 
+  FixLeftFoot: 
+    base: Standing
+    AddContacts:
+    - r1: hrp2_drc
+      r2: slope
+      r1Surface: LeftFoot
+      r2Surface: AllGround  
+    tasks:
+      CoM:
+        type: com
+        move_com: [0.0, 0.0, 0.85]    
+        weight: 1000
+        stiffness: 5
+  
 
 
   # Trajectory to bring the right hand close to the wall
-  RightHandToWall:
-    base: StandingBase
-    tasks:
-      RightHandTrajectory:
-        type: bspline_trajectory
-        setupMode: false
-        surface: RightGripper
-        weight: 1000
-        stiffness: 50
-        duration: 5.0
-        dimWeight: [1, 1, 1, 1, 0.5, 0.5]
-        displaySamples: 100
-        target:
-          translation: [0.3, -0.35, 1]
-          rotation: [0.0, -1.57, 0.0]
-        controlPoints: [[0.0, -0.5, 0.85]]
-        oriWaypoints: [3.5, [-0.785, 0.0, 1.57]]
-        completion:
-          timeElapsed: true
+  # RightHandToWall:
+  #   base: StandingBase
+  #   tasks:
+  #     RightHandTrajectory:
+  #       type: bspline_trajectory
+  #       setupMode: false
+  #       surface: RightGripper
+  #       weight: 1000
+  #       stiffness: 50
+  #       duration: 5.0
+  #       dimWeight: [1, 1, 1, 1, 0.5, 0.5]
+  #       displaySamples: 100
+  #       target:
+  #         translation: [0.3, -0.35, 1]
+  #         rotation: [0.0, -1.57, 0.0]
+  #       controlPoints: [[0.0, -0.5, 0.85]]
+  #       oriWaypoints: [3.5, [-0.785, 0.0, 1.57]]
+  #       completion:
+  #         timeElapsed: true
 
 # Right Hand reaching the table and making contact
-  RightHand::ContactWithConstantVel:
-    base: StandingBase
-#    config:
-#      CoM:
-#        move_com: [0.05, 0, 0] 
-    # Only allow motion along hand's z axis
-    AddContacts:
-      - r1: hrp2_drc
-        r2: wall  
-        r1Surface: RightGripper
-        r2Surface: AllGround
-        dof: [0, 0, 0, 0, 0, 0]
-    tasks:
-      RightHandContactConstantVelocity:
-        type: surfaceTransform
-        surface: RightGripper
-        refVel: [0,0,0,0,0,-0.03]
-        stiffness: 1
-        damping: 300
-        weight: 800
-        completion:
-          wrench:
-            couple: [.NaN, .NaN, .NaN]
-            force: [.NaN, .NaN, 20.0]
+#   RightHand::ContactWithConstantVel:
+#     base: StandingBase
+# #    config:
+# #      CoM:
+# #        move_com: [0.05, 0, 0] 
+#     # Only allow motion along hand's z axis
+#     AddContacts:
+#       - r1: hrp2_drc
+#         r2: wall  
+#         r1Surface: RightGripper
+#         r2Surface: AllGround
+#         dof: [0, 0, 0, 0, 0, 0]
+#     tasks:
+#       RightHandContactConstantVelocity:
+#         type: surfaceTransform
+#         surface: RightGripper
+#         refVel: [0,0,0,0,0,-0.03]
+#         stiffness: 1
+#         damping: 300
+#         weight: 800
+#         completion:
+#           wrench:
+#             couple: [.NaN, .NaN, .NaN]
+#             force: [.NaN, .NaN, 20.0]
   
-  RightHand::Contact:
-    base: StandingBase
-    AddContacts:
-      - r1: hrp2_drc
-        r2: wall
-        r1Surface: RightGripper
-        r2Surface: AllGround
-        dof: [0, 0, 0, 0, 0, 0]
+  # RightHand::Contact:
+  #   base: StandingBase
+  #   AddContacts:
+  #     - r1: hrp2_drc
+  #       r2: wall
+  #       r1Surface: RightGripper
+  #       r2Surface: AllGround
+  #       dof: [0, 0, 0, 0, 0, 0]
 
-  RightHandMoveBack:
-    base: MetaTasks
-    RemoveContacts:
-      - r1: hrp2_drc
-        r2: wall
-        r1Surface: RightGripper
-        r2Surface: AllGround
-    tasks:
-      MoveRightHand:
-       type: surfaceTransform
-       surface: RightGripper
-       refVel: [0,0,0,0,0, 0.02]
-       stiffness: 3.0
-       damping: 50
-       weight: 500
-       moveWorld:
-         translation: [-0.1, -0.1, -0.1]
-       completion:
-         OR:
-           - eval: 0.05
-           - AND:
-               - timeout: 3.0
-               - speed: 0.01
-  RightHand::Remove:
-    base: Parallel
-    states: [StandingBase, RightHandMoveBack]
-    configs:
-      StandingBase:
-        stiffness: 10
+  # RightHandMoveBack:
+  #   base: MetaTasks
+  #   RemoveContacts:
+  #     - r1: hrp2_drc
+  #       r2: wall
+  #       r1Surface: RightGripper
+  #       r2Surface: AllGround
+  #   tasks:
+  #     MoveRightHand:
+  #      type: surfaceTransform
+  #      surface: RightGripper
+  #      refVel: [0,0,0,0,0, 0.02]
+  #      stiffness: 3.0
+  #      damping: 50
+  #      weight: 500
+  #      moveWorld:
+  #        translation: [-0.1, -0.1, -0.1]
+  #      completion:
+  #        OR:
+  #          - eval: 0.05
+  #          - AND:
+  #              - timeout: 3.0
+  #              - speed: 0.01
+  # RightHand::Remove:
+  #   base: Parallel
+  #   states: [StandingBase, RightHandMoveBack]
+  #   configs:
+  #     StandingBase:
+  #       stiffness: 10
 
 
   # Go back to halfsitting
-  StandingHalfSitting:
-    base: Parallel
-    states: [StandingBase, HalfSitting]
-    configs:
-      HalfSitting:
-        weight: 100
-        stiffness: 5
-        completion:
-         OR:
-           - eval: 0.001
-           - AND:
-               - timeout: 3.0
-               - speed: 0.01
+  # StandingHalfSitting:
+  #   base: Parallel
+  #   states: [StandingBase, HalfSitting]
+  #   configs:
+  #     HalfSitting:
+  #       weight: 100
+  #       stiffness: 5
+  #       completion:
+  #        OR:
+  #          - eval: 0.001
+  #          - AND:
+  #              - timeout: 3.0
+  #              - speed: 0.01
 
 
 # Transitions map
 transitions:
 - [MscController_Initial,                        OK, MoveLeftFoot, Auto]
-- [MoveLeftFoot,                                 OK, RemoveHand, Auto]
+- [MoveLeftFoot,                                 OK, FixLeftFoot, Auto]
 # - [RightHandToWall,                              OK, RightHand::ContactWithConstantVel, Auto]
 # - [RightHand::ContactWithConstantVel,            OK, RightHand::Contact, Auto]
 # - [RightHand::Contact,                           OK, RemoveHand, Auto]
