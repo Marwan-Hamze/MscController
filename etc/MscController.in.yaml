@@ -72,28 +72,32 @@ active_dof: ["Root", "LLEG_JOINT0", "LLEG_JOINT1", "LLEG_JOINT2", "LLEG_JOINT3",
 
 # Implement some additional text states
 states:
-  # Keep the CoM centered between the feet, and the chest and base upright
-  Standing:
-    base: MetaTasks
-    tasks:
-      CoM:
-        type: com
-        above: RightFoot     
-        weight: 1000
-        stiffness: 5
-      KeepTorso:
-        type: orientation
-        body: CHEST_LINK1
-        weight: 1000
-        stiffness: 1
-      KeepBase:
-        type: orientation
-        body: BODY
-        weight: 1000
-        stiffness: 1
+  # # Keep the CoM centered between the feet, and the chest and base upright
+  # Stabilizer::Standing:
+  #   base: StabilizerStandingState
+  #   # This stiffness controls the spring-damper computation of the reference CoM position
+  #   # damping is automatically computed as 2*sqrt(stiffness)
+  #   stiffness: 5
+  #   # StabilizerTask configuration (see previous section)
+  #   StabilizerConfig:
+  #     type: lipm_stabilizer
+  #     leftFootSurface: LeftFoot
+  #     rightFootSurface: RightFoot
+  #     enabled: true
+  #     contacts: [Left, Right]
+
+  # Stabilizer::GoCenter:
+  #   base: Stabilizer::Standing
+  #   above: Center
+  #   completion:
+  #     dcmEval: [0.005, 0.005, 0.05]
+
+  # Stabilizer::GoRight:
+  #   base: Stabilizer::GoCenter
+  #   above: RightAnkle 
 
   MoveLeftFoot:
-    base: Standing
+    base: Stabilizer::GoRight
     RemoveContacts:
       - r1: hrp2_drc
         r2: ground
@@ -117,7 +121,7 @@ states:
           - [0.017046, 0.12, 0.15]
  
   FixLeftFoot: 
-    base: Standing
+    base: Stabilizer::GoCenter
     AddContacts:
     - r1: hrp2_drc
       r2: slope
@@ -237,6 +241,7 @@ states:
 
 # Transitions map
 transitions:
+- [Stabilizer::GoRight,                        OK, MscController_Initial, Auto]
 - [MscController_Initial,                        OK, MoveLeftFoot, Auto]
 - [MoveLeftFoot,                                 OK, FixLeftFoot, Auto]
 # - [RightHandToWall,                              OK, RightHand::ContactWithConstantVel, Auto]
@@ -248,7 +253,7 @@ transitions:
 # - [RightHand::Remove,                            OK, StandingHalfSitting, Auto]
 
 # Initial state
-init: MscController_Initial
+init: Stabilizer::GoRight
 #Observer Pipelines
 ObserverPipelines:
   name: "MscControllerObserverPipeline"
