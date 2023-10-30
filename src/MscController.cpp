@@ -94,8 +94,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   // Logging the ZMP of the real robot
 
-  logger().addLogEntry("ZMP", [this]() {return zmp_x;});
-  logger().addLogEntry("ZMP", [this]() {return zmp_y;});
+  logger().addLogEntry("ZMP_x", [this]() {return zmp_x;});
+  logger().addLogEntry("ZMP_y", [this]() {return zmp_y;});
 
   // Setting Logger Entries for the accelerations of the CoM, Base (angular), and Right Foot, all written in the world frame.
   // "The desired" accelerations are sent to the QP, the "achieved" accelerations are the derivatives of the velocities 
