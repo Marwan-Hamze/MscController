@@ -53,6 +53,9 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   fLF_ = fLF_.Zero();
   tLF_ = tLF_.Zero();
 
+  fLH_ = fLH_.Zero();
+  tLH_ = tLH_.Zero();
+
   fr_x_ = 0.0;
   fr_y_ = 0.0;
 
@@ -76,6 +79,9 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("Error_LeftFoot_Force", [this]() { return fLF_; });
   logger().addLogEntry("Error_LeftFoot_Moment", [this]() { return tLF_; });
 
+  logger().addLogEntry("LeftHand_Force", [this]() { return fLF_; });
+  logger().addLogEntry("LeftHand_Moment", [this]() { return tLF_; });
+
   // Logging the Cop of each foot
 
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
@@ -85,6 +91,11 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   logger().addLogEntry("Friction_RightFoot_x", [this]() {return fr_x_;});
   logger().addLogEntry("Friction_RightFoot_y", [this]() {return fr_y_;});
+
+  // Logging the ZMP of the real robot
+
+  logger().addLogEntry("ZMP", [this]() {return zmp_x;});
+  logger().addLogEntry("ZMP", [this]() {return zmp_y;});
 
   // Setting Logger Entries for the accelerations of the CoM, Base (angular), and Right Foot, all written in the world frame.
   // "The desired" accelerations are sent to the QP, the "achieved" accelerations are the derivatives of the velocities 
@@ -448,14 +459,43 @@ bool MscController::run()
     fLF_ = stab_->f_delta_.block(6,0,3,1);
     tLF_ = stab_->f_delta_.block(9,0,3,1);
 
+    // To log the force at the Left Hand when pushed
+
+    fLH_ = realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force();
+    tLH_ = realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).moment();
+
+    // To Calculate the ZMP (and the Contact Friction)
+
+    f_RF_x_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x();
+    f_RF_y_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y();
+    f_RF_z_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z();
+
+    f_LF_x_ = realRobots().robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x();
+    f_LF_y_ = realRobots().robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y();
+    f_LF_z_ = realRobots().robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z();
+
+    t_RF_x_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).moment().x();
+    t_RF_y_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).moment().y();
+
+    t_LF_x_ = realRobots().robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots().robot()).moment().x();
+    t_LF_y_ = realRobots().robot().forceSensor("LeftFootForceSensor").wrenchWithoutGravity(realRobots().robot()).moment().y();
+
+    p_RF_x_ = realRobots().robot().bodyPosW("RLEG_LINK5").translation().x();
+    p_RF_y_ = realRobots().robot().bodyPosW("RLEG_LINK5").translation().y();
+    p_RF_z_ = realRobots().robot().bodyPosW("RLEG_LINK5").translation().z();
+
+    p_LF_x_ = realRobots().robot().bodyPosW("LLEG_LINK5").translation().x();
+    p_LF_y_ = realRobots().robot().bodyPosW("LLEG_LINK5").translation().y();
+    p_LF_z_ = realRobots().robot().bodyPosW("LLEG_LINK5").translation().z();
+
+    // ZMP calculation
+
+    zmp_x = (p_RF_x_* f_RF_z_ - p_RF_z_ * f_RF_x_ - t_RF_y_ + p_LF_x_* f_LF_z_ - p_LF_z_ * f_LF_x_ - t_LF_y_)/(f_RF_z_ + f_LF_z_);
+    zmp_y = (p_RF_y_* f_RF_z_ - p_RF_z_ * f_RF_y_ + t_RF_x_ + p_LF_y_* f_LF_z_ - p_LF_z_ * f_LF_y_ + t_LF_x_)/(f_RF_z_ + f_LF_z_);
+
     // To log the Friction at the Right Foot
 
-    f_x_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x();
-    f_y_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y();
-    f_z_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z();
-
-
-    if(f_z_ == 0.0 ) {
+    if(f_RF_z_ == 0.0 ) {
     
     fr_x_ = 0.0;
     fr_y_ = 0.0;
@@ -464,8 +504,8 @@ bool MscController::run()
 
     else {
 
-    fr_x_ = f_x_/f_z_;
-    fr_y_ = f_y_/f_z_;
+    fr_x_ = f_RF_x_/f_RF_z_;
+    fr_y_ = f_RF_y_/f_RF_z_;
 
     }
 
@@ -529,5 +569,24 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
       "Robot's CoM_y(t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "CoM(y)", [this]() { return realRobots().robot().com().y(); }, Color::Red));
+
+  gui()->addPlot(
+      "Robot's ZMP_x(t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "ZMP(x)", [this]() { return zmp_x; }, Color::Red));
+
+  gui()->addPlot(
+      "Robot's ZMP_y(t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "ZMP(y)", [this]() { return zmp_y; }, Color::Red));
+
+  gui()->addPlot(
+      "Left Hand Force (t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "f_LH(z)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red), 
+      mc_rtc::gui::plot::Y(
+          "f_LH(x)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green),
+      mc_rtc::gui::plot::Y(
+          "f_LH(y)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue)); 
 
 }

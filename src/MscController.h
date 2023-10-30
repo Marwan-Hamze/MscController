@@ -46,12 +46,14 @@ private:
 
    // Vectors to add error signals to the logs
    
-    Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_;
+    Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_, fLH_, tLH_;
 
 
-  // Variables to calculate and Log the Contact Friction 
+  // Variables to calculate and Log the Contact Friction and the ZMP
 
-    double f_x_, f_y_, f_z_, fr_x_, fr_y_;
+    double f_RF_x_, f_RF_y_, f_RF_z_, f_LF_x_, f_LF_y_, f_LF_z_, fr_x_, fr_y_;
+    double t_RF_x_, t_RF_y_, t_LF_x_, t_LF_y_;
+    double p_RF_x_, p_RF_y_, p_RF_z_, p_LF_x_, p_LF_y_, p_LF_z_;
 
     // Accelerations by Finite Differences to check the accelerations.
 
@@ -87,5 +89,9 @@ private:
     // Active Joints for the CoM and Base tasks
 
     std::vector<std::string> Activedof_;
+
+    // Calculation of the ZMP
+
+    double zmp_x, zmp_y;
 
 };
