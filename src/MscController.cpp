@@ -79,8 +79,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("Error_LeftFoot_Force", [this]() { return fLF_; });
   logger().addLogEntry("Error_LeftFoot_Moment", [this]() { return tLF_; });
 
-  logger().addLogEntry("LeftHand_Force", [this]() { return fLF_; });
-  logger().addLogEntry("LeftHand_Moment", [this]() { return tLF_; });
+  logger().addLogEntry("LeftHand_Force", [this]() { return fLH_; });
+  logger().addLogEntry("LeftHand_Moment", [this]() { return tLH_; });
 
   // Logging the Cop of each foot
 
