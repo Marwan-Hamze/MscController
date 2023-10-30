@@ -47,7 +47,7 @@ private:
 
     // Vectors to add error signals to the logs
 
-    Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_, pRH_, thetaRH_, vRH_, omRH_, fRH_, tRH_;
+    Vector3d com_, theta_, comd_, om_, pRF_, thetaRF_, vRF_, omRF_, fRF_, tRF_, pLF_, thetaLF_, vLF_, omLF_, fLF_, tLF_, pRH_, thetaRH_, vRH_, omRH_, fRH_, tRH_, fLH_, tLH_;;
 
     // Variables to calculate and Log the Contact Friction 
 

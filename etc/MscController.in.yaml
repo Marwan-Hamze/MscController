@@ -125,7 +125,7 @@ states:
         completion:
           timeElapsed: true
 
-# Right Hand reaching the table and making contact
+# Right Hand reaching the wall and making contact
   RightHand::ContactWithConstantVel:
     base: StandingBase
 #    config:
@@ -158,7 +158,7 @@ states:
         r2: wall
         r1Surface: RightGripper
         r2Surface: AllGround
-        dof: [0, 0, 0, 0, 0, 0]
+        dof: [1, 1, 1, 1, 1, 1]
 
   RightHandMoveBack:
     base: MetaTasks

@@ -68,6 +68,9 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   fRH_ = fRH_.Zero();
   tRH_ = tRH_.Zero();
 
+  fLH_ = fLH_.Zero();
+  tLH_ = tLH_.Zero();
+
   fr_x_RF_ = 0.0;
   fr_y_RF_ = 0.0;
 
@@ -100,6 +103,9 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("Error_RightHand_Force", [this]() { return fRH_; });
   logger().addLogEntry("Error_RightHand_Moment", [this]() { return tRH_; });
 
+  logger().addLogEntry("LeftHand_Force", [this]() { return fLH_; });
+  logger().addLogEntry("LeftHand_Moment", [this]() { return tLH_; });
+
   // Logging the desired accelerations in the world frame sent to the QP 
 
   logger().addLogEntry("Accelerations_RightFoot_Linear", [this]() { return stab_->accelerations_.RF_linAcc;});
@@ -113,15 +119,15 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
 
   logger().addLogEntry("CoP_RightFoot", [this]() {return realRobots().robot().cop("RightFoot");});
   logger().addLogEntry("CoP_LeftFoot", [this]() {return realRobots().robot().cop("LeftFoot");});
-  logger().addLogEntry("CoP_RightHand", [this]() {return realRobots().robot().cop("RightHand");});
+  logger().addLogEntry("CoP_RightHand", [this]() {return realRobots().robot().cop("RightGripper");});
 
   // Logging the Friction at the Right Foot and Right Hand
 
   logger().addLogEntry("Friction_RightFoot_x", [this]() {return fr_x_RF_;});
   logger().addLogEntry("Friction_RightFoot_y", [this]() {return fr_y_RF_;});
 
-/*   logger().addLogEntry("Friction_RightHand_x", [this]() {return fr_z_RH_;});
-  logger().addLogEntry("Friction_RightHand_y", [this]() {return fr_y_RH_;}); */
+  logger().addLogEntry("Friction_RightHand_z", [this]() {return fr_z_RH_;});
+  logger().addLogEntry("Friction_RightHand_y", [this]() {return fr_y_RH_;}); 
 
 }
 
@@ -553,7 +559,7 @@ bool MscController::run()
 
     else {
 
-    fr_z_RH_ = f_z_RH_/f_x_RH_;
+    fr_z_RH_ = - f_z_RH_/f_x_RH_;
     fr_y_RH_ = f_y_RH_/f_x_RH_;
 
   }
@@ -643,7 +649,7 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
       mc_rtc::gui::plot::Y(
           "CoM(y)", [this]() { return realRobots().robot().com().y(); }, Color::Red));
 
-   gui()->addPlot(
+  gui()->addPlot(
       "Right Hand Force (t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
           "f_RH(z)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red), 
@@ -651,5 +657,14 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
           "f_RH(x)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green),
       mc_rtc::gui::plot::Y(
           "f_RH(y)", [this]() { return realRobots().robot().forceSensor("RightHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue)); 
+
+  gui()->addPlot(
+      "Left Hand Force (t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "f_LH(z)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red), 
+      mc_rtc::gui::plot::Y(
+          "f_LH(x)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green),
+      mc_rtc::gui::plot::Y(
+          "f_LH(y)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue)); 
 
 }
