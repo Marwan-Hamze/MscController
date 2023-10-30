@@ -525,8 +525,12 @@ bool MscController::run()
     fRH_ = stab_->f_delta_.block(12,0,3,1);
     tRH_ = stab_->f_delta_.block(15,0,3,1);
 
+    // To log the force at the Left Hand when pushed
+
+    fLH_ = realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force();
+    tLH_ = realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).moment();
+
     // To log the Friction at the Right Foot and Right Hand
-    // To review for the RH since you're not choosing the normal force correctly
 
     f_x_RF_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x();
     f_y_RF_ = realRobots().robot().forceSensor("RightFootForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y();

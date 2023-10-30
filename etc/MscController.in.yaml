@@ -92,12 +92,12 @@ states:
   
   #Move the CoM to the front
   MoveCoM:
-    base: MetaTasks
+    base: StandingBase
     tasks:
       CoM:
         type: com
         above: [LeftFoot, RightFoot]
-        move_com: [0.04, 0, 0]        
+        move_com: [0.02, 0, 0]        
         weight: 2000
         stiffness: 5
 #        duration: 4.0
