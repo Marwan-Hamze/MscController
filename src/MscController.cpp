@@ -527,8 +527,8 @@ bool MscController::run()
 
     // To log the force at the Left Hand when pushed
 
-    fLH_ = realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force();
-    tLH_ = realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).moment();
+    fLH_ = realRobots().robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(realRobots().robot()).force();
+    tLH_ = realRobots().robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(realRobots().robot()).moment();
 
     // To log the Friction at the Right Foot and Right Hand
 
@@ -665,10 +665,10 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
   gui()->addPlot(
       "Left Hand Force (t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
       mc_rtc::gui::plot::Y(
-          "f_LH(z)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red), 
+          "f_LH(z)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(realRobots().robot()).force().z(); }, Color::Red), 
       mc_rtc::gui::plot::Y(
-          "f_LH(x)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green),
+          "f_LH(x)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green),
       mc_rtc::gui::plot::Y(
-          "f_LH(y)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").wrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue)); 
+          "f_LH(y)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue)); 
 
 }

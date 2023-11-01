@@ -81,28 +81,48 @@ states:
         stiffness: 5
       KeepTorso:
         type: orientation
-        body: CHEST_LINK1
+        frame: CHEST_LINK1
         weight: 1000
         stiffness: 1
       KeepBase:
         type: orientation
-        body: BODY
+        frame: BODY
         weight: 1000
         stiffness: 1
   
   #Move the CoM to the front
   MoveCoM:
-    base: StandingBase
+    base: MetaTasks
     tasks:
       CoM:
         type: com
-        above: [LeftFoot, RightFoot]
+        #above: [LeftFoot, RightFoot]
         move_com: [0.02, 0, 0]        
         weight: 2000
         stiffness: 5
 #        duration: 4.0
-#        completion:
-#          eval: 0.001
+        completion:
+          eval: 0.01
+      KeepTorso:
+        type: orientation
+        frame: CHEST_LINK1
+        weight: 1000
+        stiffness: 1
+      KeepBase:
+        type: orientation
+        frame: BODY
+        weight: 1000
+        stiffness: 1
+      KeepRightHand:
+        type: body6d
+        frame: RARM_LINK7
+        # Rotation expressed as RPY (in radian)
+        # May also be expressed as quaternion or rotation matrix
+        #orientation: [0.0, 0.0, 0.0]
+        #position: [0.0, 0.0, 0.0]
+        weight: 1000
+        stiffness: 1
+      
   
   # Trajectory to bring the right hand close to the wall
   RightHandToWall:
@@ -128,10 +148,7 @@ states:
 # Right Hand reaching the wall and making contact
   RightHand::ContactWithConstantVel:
     base: StandingBase
-#    config:
-#      CoM:
-#        move_com: [0.05, 0, 0] 
-    # Only allow motion along hand's z axis
+    #Only allow motion along hand's z axis
     AddContacts:
       - r1: hrp2_drc
         r2: wall  
@@ -146,10 +163,31 @@ states:
         stiffness: 1
         damping: 300
         weight: 800
+        duration: 3.0
         completion:
+          # OR:
+          #  - eval: 0.05
+          #  - AND:
+          #      - timeout: 3.0
+          #      - speed: 0.01
           wrench:
             couple: [.NaN, .NaN, .NaN]
             force: [.NaN, .NaN, 20.0]
+      CoM:
+        type: com
+        #above: [LeftFoot, RightFoot]
+        move_com: [0.04, 0, 0]        
+        weight: 2000
+        stiffness: 5
+      KeepLeftHand:
+        type: body6d
+        frame: LARM_LINK7
+        # Rotation expressed as RPY (in radian)
+        # May also be expressed as quaternion or rotation matrix
+        #orientation: [0.0, 0.0, 0.0]
+        #position: [0.0, 0.0, 0.0]
+        weight: 1000
+        stiffness: 1
   
   RightHand::Contact:
     base: StandingBase
@@ -158,7 +196,7 @@ states:
         r2: wall
         r1Surface: RightGripper
         r2Surface: AllGround
-        dof: [1, 1, 1, 1, 1, 1]
+        dof: [0, 0, 0, 0, 0, 0]
 
   RightHandMoveBack:
     base: MetaTasks
@@ -212,11 +250,12 @@ transitions:
 - [MscController_Initial,                        OK, RightHandToWall, Auto]
 - [RightHandToWall,                              OK, RightHand::ContactWithConstantVel, Auto]
 - [RightHand::ContactWithConstantVel,            OK, RightHand::Contact, Auto]
-- [RightHand::Contact,                           OK, RemoveHand, Auto]
-#- [RightHand::Contact,                           OK, MoveCoM, Auto]
-#- [MoveCoM,                                      OK, RemoveHand, Auto]
-- [RemoveHand,                                   OK, RightHand::Remove, Auto]
-- [RightHand::Remove,                            OK, StandingHalfSitting, Auto]
+#- [RightHand::Contact,                           OK, RemoveHand, Auto]
+- [RightHand::Contact,                           OK, StandingHalfSitting, Auto]
+# - [MoveCoM,                                      OK, StandingHalfSitting, Auto]
+# - [MoveCoM,                                      OK, RemoveHand, Auto]
+# - [RemoveHand,                                   OK, RightHand::Remove, Auto]
+# - [RightHand::Remove,                            OK, StandingHalfSitting, Auto]
 
 # Initial state
 init: MscController_Initial
