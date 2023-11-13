@@ -56,6 +56,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   fLH_ = fLH_.Zero();
   tLH_ = tLH_.Zero();
 
+  Am_ = Am_.Zero();
+
   fr_x_ = 0.0;
   fr_y_ = 0.0;
 
@@ -78,6 +80,8 @@ MscController::MscController(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rt
   logger().addLogEntry("Error_LeftFoot_AngVelocity", [this]() { return omLF_; });
   logger().addLogEntry("Error_LeftFoot_Force", [this]() { return fLF_; });
   logger().addLogEntry("Error_LeftFoot_Moment", [this]() { return tLF_; });
+
+  logger().addLogEntry("Angular Momentum Simple", [this]() { return Am_; });
 
   logger().addLogEntry("LeftHand_Force", [this]() { return fLH_; });
   logger().addLogEntry("LeftHand_Moment", [this]() { return tLH_; });
@@ -196,6 +200,17 @@ bool MscController::run()
     gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Check The LQR Gain", [this]() {
       
       mc_rtc::log::info("LQR Gain K = \n{}\n" , stab_->K_);
+
+      }));
+
+    gui()->addElement({"Stabilizer","Main"}, mc_rtc::gui::Button("Take a New Reference", [this]() {
+      
+
+      stab_->reconfigure(stab_->config_);
+      stab_->x_ref_ = stab_->reference(realRobots());
+      stab_->linearMatrix_ = stab_->computeMatrix(stab_->x_ref_, stab_->config_);
+      stab_->K_ = stab_->computeGain(stab_->linearMatrix_, stab_->config_); 
+      mc_rtc::log::info("A New Reference is Obtained, and the LQR Gain is Updated ");
 
       }));
 
@@ -459,6 +474,12 @@ bool MscController::run()
     fLF_ = stab_->f_delta_.block(6,0,3,1);
     tLF_ = stab_->f_delta_.block(9,0,3,1);
 
+    // To Log the Angular Momentum calculated from the Simple Model: RIR'w:
+
+    // Am_ = stab_->feedback_.CoM.R * stab_->config_.I * stab_->feedback_.CoM.R.transpose() * stab_->feedback_.CoM.angvel;
+
+    Am_ = stab_->feedback_.CoM.R * stab_->config_.I * stab_->feedback_.CoM.R.transpose() * realRobots().robot().bodyVelW("BODY").angular();
+
     // To log the force at the Left Hand when pushed
 
     fLH_ = realRobots().robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(realRobots().robot()).force();
@@ -588,5 +609,14 @@ void MscController::reset(const mc_control::ControllerResetData & reset_data)
           "f_LH(x)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(realRobots().robot()).force().x(); }, Color::Green),
       mc_rtc::gui::plot::Y(
           "f_LH(y)", [this]() { return realRobots().robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(realRobots().robot()).force().y(); }, Color::Blue)); 
+
+  gui()->addPlot(
+      "Angular Momentum Simple (t)", mc_rtc::gui::plot::X("t", [this]() { return t_; }),
+      mc_rtc::gui::plot::Y(
+          "f_LH(z)", [this]() { return Am_.z(); }, Color::Red), 
+      mc_rtc::gui::plot::Y(
+          "f_LH(x)", [this]() { return Am_.x(); }, Color::Green),
+      mc_rtc::gui::plot::Y(
+          "f_LH(y)", [this]() { return Am_.y(); }, Color::Blue)); 
 
 }

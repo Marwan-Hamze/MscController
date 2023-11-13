@@ -125,17 +125,17 @@ protected:
 
         Matrix<double, 36, 12> N_xu;
 
-        Vector3d qcom_p {1e0, 1e0, 1e0}; //In Simulation: {3e5, 3e5, 3e5} - Starting Point: {1e2, 1e2, 1e2}
-        Vector3d qcom_R {1e0, 1e0, 1e0}; //In Simulation: {1e2, 1e2, 1e2} - Starting Point: {1e0, 1e0, 1e0}
-        Vector3d qcom_vel {1e0, 1e0, 1e0}; //In Simulation: {3e2, 3e2, 3e2} - Starting Point: {3e1, 3e1, 3e1}
-        Vector3d qcom_angvel {1e0, 1e0, 1e0}; //In Simulation: {3e1, 3e1, 3e1} - Starting Point: {1e0, 1e0, 1e0}
+        Vector3d qcom_p {1e6, 1e3, 1e0}; //In Simulation: {3e5, 3e5, 3e5} - Starting Point: {1e2, 1e2, 1e2}
+        Vector3d qcom_R {1e3, 1e3, 1e0}; //In Simulation: {1e2, 1e2, 1e2} - Starting Point: {1e0, 1e0, 1e0}
+        Vector3d qcom_vel {1e2, 1e2, 1e0}; //In Simulation: {3e2, 3e2, 3e2} - Starting Point: {3e1, 3e1, 3e1}
+        Vector3d qcom_angvel {3e2, 3e2, 1e0}; //In Simulation: {3e1, 3e1, 3e1} - Starting Point: {1e0, 1e0, 1e0}
 
-        Vector3d qRF_p {1e6, 1e6, 1e6}; //In Simulation: {1e6, 1e6, 1e6} - Starting Point: {1e6, 1e6, 1e6}
+        Vector3d qRF_p {3e4, 3e4, 3e4}; //In Simulation: {1e6, 1e6, 1e6} - Starting Point: {1e6, 1e6, 1e6}
         Vector3d qRF_R {1e4, 1e4, 1e4}; //In Simulation: {1e4, 1e4, 1e4} - Starting Point: {1e2, 1e2, 1e2}
         Vector3d qRF_vel {3e3, 3e3, 3e3}; //In Simulation: {1e4, 1e4, 1e4} - Starting Point: {3e2, 3e2, 3e2}
         Vector3d qRF_angvel {3e2, 3e2, 3e2}; //In Simulation: {3e2, 3e2, 3e2} - Starting Point: {3e1, 3e1, 3e1}
 
-        Vector3d qLF_p {1e6, 1e6, 1e6}; //In Simulation: {1e6, 1e6, 1e6} - Starting Point: {1e6, 1e6, 1e6}
+        Vector3d qLF_p {3e4, 3e4, 3e4}; //In Simulation: {1e6, 1e6, 1e6} - Starting Point: {1e6, 1e6, 1e6}
         Vector3d qLF_R {1e4, 1e4, 1e4}; //In Simulation: {1e4, 1e4, 1e4} - Starting Point: {1e2, 1e2, 1e2}
         Vector3d qLF_vel {3e3, 3e3, 3e3}; //In Simulation: {1e4, 1e4, 1e4} - Starting Point: {3e2, 3e2, 3e2}
         Vector3d qLF_angvel {3e2, 3e2, 3e2}; //In Simulation: {3e2, 3e2, 3e2} - Starting Point: {3e1, 3e1, 3e1}
@@ -155,15 +155,15 @@ protected:
         Matrix3d KTP_RF, KTP_LF;
         Matrix3d KTD_RF, KTD_LF;
 
-        Vector3d kfp_rf {4e4, 4e4, 4e4};
-        Vector3d kfd_rf {500, 500, 500};
+        Vector3d kfp_rf {4e4, 4e4, 3e3};
+        Vector3d kfd_rf {1, 1, 1};
         Vector3d ktp_rf {600, 600, 600};
-        Vector3d ktd_rf {50, 50, 50};
+        Vector3d ktd_rf {1, 1, 1};
 
-        Vector3d kfp_lf {4e4, 4e4, 4e4};
-        Vector3d kfd_lf {500, 500, 500};
+        Vector3d kfp_lf {4e4, 4e4, 3e3};
+        Vector3d kfd_lf {1, 1, 1};
         Vector3d ktp_lf {600, 600, 600};
-        Vector3d ktd_lf {50, 50, 50};  
+        Vector3d ktd_lf {1, 1, 1};  
 
         Matrix3d Rsc_RF, Rsc_LF;
 
